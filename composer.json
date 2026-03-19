@@ -1,8 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/livewire-starter-kit",
+    "name": "courtmaster/courtmaster-pro",
     "type": "project",
-    "description": "The official Laravel starter kit for Livewire.",
+    "description": "CourtMaster Pro — Badminton Tournament Management System (Livewire).",
     "keywords": [
         "laravel",
         "framework"
