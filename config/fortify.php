@@ -144,7 +144,7 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Features::registration() disabled (signup page/route not available).
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::twoFactorAuthentication([
