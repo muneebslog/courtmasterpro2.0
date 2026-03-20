@@ -16,6 +16,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'tournaments/{tournament}/events/{event}',
         'pages::event',
     )->name('tournaments.events.show');
+
+    Route::livewire(
+        'tournaments/{tournament}/events/{event}/stages/{stage}',
+        'pages::event.stage',
+    )->name('tournaments.events.stages.show');
 });
 
 require __DIR__.'/settings.php';

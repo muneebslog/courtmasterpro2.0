@@ -322,12 +322,16 @@ new class extends Component {
         @else
             <div class="mt-6 space-y-3">
                 @foreach ($stages as $stage)
-                    <div class="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm dark:border-neutral-700 dark:bg-neutral-800">
+                    <a
+                        wire:navigate
+                        href="{{ route('tournaments.events.stages.show', ['tournament' => $tournament->id, 'event' => $event->id, 'stage' => $stage->id]) }}"
+                        class="block rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm transition hover:border-neutral-300 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:border-neutral-600 dark:hover:bg-neutral-700/80"
+                    >
                         <div class="font-semibold">{{ $stage->name }}</div>
                         <div class="mt-1 text-neutral-600 dark:text-neutral-400">
                             {{ __('Best of') }}: {{ $stage->best_of }}
                         </div>
-                    </div>
+                    </a>
                 @endforeach
             </div>
         @endif
