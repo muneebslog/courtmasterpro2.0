@@ -1,10 +1,15 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LiveScoreController;
+use App\Http\Controllers\MatchPdfController;
 use App\Http\Controllers\TournamentController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+
+Route::get('live/court/{court}', [LiveScoreController::class, 'courtView'])->name('live.court');
+Route::get('live/all', [LiveScoreController::class, 'allView'])->name('live.all');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -21,6 +26,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'tournaments/{tournament}/events/{event}/stages/{stage}',
         'pages::event.stage',
     )->name('tournaments.events.stages.show');
+
+    Route::livewire(
+        'tournaments/{tournament}/events/{event}/stages/{stage}/ties/{tie}',
+        'pages::event.tie',
+    )->name('tournaments.events.stages.ties.show');
+
+    Route::livewire(
+        'tournaments/{tournament}/events/{event}/stages/{stage}/matches/{match}',
+        'pages::event.match',
+    )->name('tournaments.events.stages.matches.show');
+
+    Route::livewire(
+        'tournaments/{tournament}/events/{event}/stages/{stage}/matches/{match}/controlpanel',
+        'pages::event.match.controlpanel',
+    )->name('tournaments.events.stages.matches.controlpanel');
+
+    Route::get(
+        'tournaments/{tournament}/events/{event}/stages/{stage}/matches/{match}/pdf',
+        [MatchPdfController::class, 'download']
+    )->name('tournaments.events.stages.matches.pdf');
 });
 
 require __DIR__.'/settings.php';

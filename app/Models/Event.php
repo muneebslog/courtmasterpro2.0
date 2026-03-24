@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Event extends Model
 {
@@ -48,5 +49,20 @@ class Event extends Model
     public function teams(): HasMany
     {
         return $this->hasMany(Team::class, 'event_id');
+    }
+
+    /**
+     * Matches belonging to this event (via stages).
+     *
+     * @return HasManyThrough<MatchModel, Stage>
+     */
+    public function matches(): HasManyThrough
+    {
+        return $this->hasManyThrough(MatchModel::class, Stage::class);
+    }
+
+    public function isDeletable(): bool
+    {
+        return ! $this->stages()->exists() && ! $this->matches()->exists();
     }
 }

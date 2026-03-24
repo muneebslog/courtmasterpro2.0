@@ -2,6 +2,7 @@
 use App\Models\Event;
 use App\Models\Tournament;
 use App\Models\User;
+use App\Support\BracketStageNaming;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -83,24 +84,6 @@ new class extends Component {
             && (int) $tournament->admin_id === (int) $user->id;
     }
 
-    private function isPowerOfTwo(int $value): bool
-    {
-        return $value > 0 && ($value & ($value - 1)) === 0;
-    }
-
-    private function stageNameForPlayers(int $players): string
-    {
-        return match ($players) {
-            2 => (string) __('Final'),
-            4 => (string) __('Semi Final'),
-            8 => (string) __('Quarter Final'),
-            16 => (string) __('Round of 16'),
-            32 => (string) __('Round of 32'),
-            64 => (string) __('Round of 64'),
-            default => (string) __('Round of :players', ['players' => (string) $players]),
-        };
-    }
-
     #[Computed]
     public function stagePreview(): array
     {
@@ -113,7 +96,7 @@ new class extends Component {
             ];
         }
 
-        if (! $this->isPowerOfTwo($matches)) {
+        if (! BracketStageNaming::isPowerOfTwo($matches)) {
             return [
                 'valid' => false,
                 'error' => (string) __('Number of matches must be a power of 2.'),
@@ -124,7 +107,7 @@ new class extends Component {
 
         return [
             'valid' => true,
-            'name' => $this->stageNameForPlayers($players),
+            'name' => BracketStageNaming::stageNameForPlayers($players),
             'matches' => $matches,
             'players' => $players,
         ];
@@ -208,7 +191,18 @@ new class extends Component {
         $tournament = $this->tournament();
         abort_unless($this->canAdminister($tournament), 403);
 
-        $this->event()->delete();
+        $event = $this->event();
+
+        if (! $event->isDeletable()) {
+            $this->addError(
+                'delete_event',
+                (string) __('This event cannot be deleted while it has stages or matches. Remove those first.')
+            );
+
+            return;
+        }
+
+        $event->delete();
 
         $this->closeDeleteEventModal();
 
@@ -229,14 +223,14 @@ new class extends Component {
         ]);
 
         $matches = (int) $validated['create_stage_matches'];
-        if (! $this->isPowerOfTwo($matches)) {
+        if (! BracketStageNaming::isPowerOfTwo($matches)) {
             $this->addError('create_stage_matches', (string) __('Number of matches must be a power of 2.'));
 
             return;
         }
 
         $bestOf = (int) $validated['create_stage_best_of'];
-        $stageName = $this->stageNameForPlayers($matches * 2);
+        $stageName = BracketStageNaming::stageNameForPlayers($matches * 2);
 
         DB::transaction(function () use ($event, $bestOf, $stageName): void {
             $event->stages()->create([
@@ -254,7 +248,18 @@ new class extends Component {
 @php
     $tournament = $this->tournament();
     $event = $this->event();
-    $stages = $event->stages()->orderBy('order_index')->get();
+
+    $finishedMatchStatuses = ['completed', 'walkover', 'retired', 'not_required'];
+
+    $stages = $event->stages()
+        ->orderBy('order_index')
+        ->withCount([
+            'matches',
+            'ties',
+            'matches as remaining_matches_count' => fn ($q) => $q->whereNotIn('status', $finishedMatchStatuses),
+            'ties as remaining_ties_count' => fn ($q) => $q->whereNotIn('status', ['completed']),
+        ])
+        ->get();
 @endphp
 
 <div class="flex w-full flex-col gap-6 rounded-xl">
@@ -295,9 +300,11 @@ new class extends Component {
                         {{ __('Edit') }}
                     </flux:button>
 
-                    <flux:button variant="danger" wire:click="openDeleteEventModal">
-                        {{ __('Delete') }}
-                    </flux:button>
+                    @if ($event->isDeletable())
+                        <flux:button variant="danger" wire:click="openDeleteEventModal">
+                            {{ __('Delete') }}
+                        </flux:button>
+                    @endif
                 </div>
             @endif
         </div>
@@ -322,12 +329,52 @@ new class extends Component {
         @else
             <div class="mt-6 space-y-3">
                 @foreach ($stages as $stage)
+                    @php
+                        if ($event->event_type === Event::EVENT_TYPE_TEAM) {
+                            $totalUnits = (int) $stage->ties_count;
+                            $remainingUnits = (int) $stage->remaining_ties_count;
+                            $unitLabel = __('Ties');
+                            $participantLabel = __('Teams');
+                            $participantCount = $totalUnits * 2;
+                        } else {
+                            $totalUnits = (int) $stage->matches_count;
+                            $remainingUnits = (int) $stage->remaining_matches_count;
+                            $unitLabel = __('Matches');
+                            $participantLabel = __('Players');
+                            $participantCount = $event->event_type === Event::EVENT_TYPE_DOUBLES
+                                ? $totalUnits * 4
+                                : $totalUnits * 2;
+                        }
+                    @endphp
                     <a
                         wire:navigate
                         href="{{ route('tournaments.events.stages.show', ['tournament' => $tournament->id, 'event' => $event->id, 'stage' => $stage->id]) }}"
                         class="block rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm transition hover:border-neutral-300 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:border-neutral-600 dark:hover:bg-neutral-700/80"
                     >
                         <div class="font-semibold">{{ $stage->name }}</div>
+                        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-600 dark:text-neutral-400">
+                            <span>
+                                {{ $unitLabel }}:
+                                <span
+                                    class="font-medium text-neutral-800 dark:text-neutral-200"
+                                    data-stage-stat-total="{{ $totalUnits }}"
+                                >{{ $totalUnits }}</span>
+                            </span>
+                            <span>
+                                {{ __('Remaining') }}:
+                                <span
+                                    class="font-medium text-neutral-800 dark:text-neutral-200"
+                                    data-stage-stat-remaining="{{ $remainingUnits }}"
+                                >{{ $remainingUnits }}</span>
+                            </span>
+                            <span>
+                                {{ $participantLabel }}:
+                                <span
+                                    class="font-medium text-neutral-800 dark:text-neutral-200"
+                                    data-stage-stat-participants="{{ $participantCount }}"
+                                >{{ $participantCount }}</span>
+                            </span>
+                        </div>
                         <div class="mt-1 text-neutral-600 dark:text-neutral-400">
                             {{ __('Best of') }}: {{ $stage->best_of }}
                         </div>
@@ -414,6 +461,10 @@ new class extends Component {
                     <span class="font-semibold">{{ $event->event_name }}</span>
                     <span class="text-neutral-600 dark:text-neutral-400">({{ ucfirst((string) $event->event_type) }})</span>
                 </div>
+
+                @error('delete_event')
+                    <flux:text color="red" class="text-sm">{{ $message }}</flux:text>
+                @enderror
 
                 <div class="flex justify-end gap-3 pt-2">
                     <flux:button type="button" variant="outline" wire:click="closeDeleteEventModal">

@@ -102,6 +102,71 @@ test('admin can create an event and it appears in the tournament events', functi
     )->toBeTrue();
 });
 
+test('sidebar lists tournament events with links on tournament show page', function (): void {
+    /** @var User $admin */
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    $tournament = Tournament::create([
+        'tournament_name' => 'National Open 2026',
+        'location' => 'Peshawar',
+        'start_date' => now()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'status' => 'draft',
+        'admin_id' => $admin->id,
+    ]);
+
+    $event = Event::factory()->create([
+        'tournament_id' => $tournament->id,
+        'event_name' => 'Mens Singles Championship Division',
+    ]);
+
+    $this->actingAs($admin);
+
+    $response = $this->get(route('tournaments.show', $tournament));
+
+    $response->assertOk();
+    $response->assertSee('Mens Singles Championship Division');
+    $response->assertSee(route('tournaments.events.show', [$tournament, $event]), false);
+});
+
+test('sidebar lists events for tournaments attached to umpire user', function (): void {
+    /** @var User $admin */
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    /** @var User $umpire */
+    $umpire = User::factory()->create([
+        'role' => User::ROLE_UMPIRES,
+    ]);
+
+    $tournament = Tournament::create([
+        'tournament_name' => 'Regional Cup 2026',
+        'location' => 'Peshawar',
+        'start_date' => now()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'status' => 'draft',
+        'admin_id' => $admin->id,
+    ]);
+
+    $tournament->users()->attach([$umpire->id]);
+
+    $event = Event::factory()->create([
+        'tournament_id' => $tournament->id,
+        'event_name' => 'Umpire Sidebar Event',
+    ]);
+
+    $this->actingAs($umpire);
+
+    $response = $this->get(route('dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('Umpire Sidebar Event');
+    $response->assertSee(route('tournaments.events.show', [$tournament, $event]), false);
+});
+
 test('attached umpire can view tournament but cannot create an event', function (): void {
     /** @var TestCase $this */
 
@@ -141,6 +206,81 @@ test('attached umpire can view tournament but cannot create an event', function 
             ->where('tournament_id', $tournament->id)
             ->exists()
     )->toBeFalse();
+});
+
+test('admin can delete an event that has no stages or matches', function (): void {
+    /** @var TestCase $this */
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    $tournament = Tournament::create([
+        'tournament_name' => 'National Open 2026',
+        'location' => 'Peshawar',
+        'start_date' => now()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'status' => 'draft',
+        'admin_id' => $admin->id,
+    ]);
+
+    $event = Event::create([
+        'tournament_id' => $tournament->id,
+        'event_name' => 'Deletable Event',
+        'event_type' => Event::EVENT_TYPE_SINGLES,
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test('pages::event', [
+        'tournament' => $tournament->id,
+        'event' => $event->id,
+    ])
+        ->call('deleteEvent')
+        ->assertHasNoErrors()
+        ->assertRedirect(route('tournaments.show', $tournament->id));
+
+    expect(Event::query()->whereKey($event->id)->exists())->toBeFalse();
+});
+
+test('admin cannot delete an event that has a stage', function (): void {
+    /** @var TestCase $this */
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    $tournament = Tournament::create([
+        'tournament_name' => 'National Open 2026',
+        'location' => 'Peshawar',
+        'start_date' => now()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'status' => 'draft',
+        'admin_id' => $admin->id,
+    ]);
+
+    $event = Event::create([
+        'tournament_id' => $tournament->id,
+        'event_name' => 'National Open Singles',
+        'event_type' => Event::EVENT_TYPE_SINGLES,
+    ]);
+
+    Stage::create([
+        'event_id' => $event->id,
+        'name' => 'Round of 16',
+        'best_of' => 3,
+        'order_index' => 1,
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test('pages::event', [
+        'tournament' => $tournament->id,
+        'event' => $event->id,
+    ])
+        ->call('deleteEvent')
+        ->assertHasErrors('delete_event');
+
+    expect(Event::query()->whereKey($event->id)->exists())->toBeTrue();
 });
 
 test('admin can view event details and see edit/delete actions', function (): void {
@@ -293,6 +433,80 @@ test('admin can create stages when an event has no stages', function (): void {
     expect($stages[0]->order_index)->toBe(1);
     expect($stages[0]->best_of)->toBe(3);
     expect($stages[0]->name)->toBe('Round of 16');
+});
+
+test('event page lists stage match remaining and player counts', function (): void {
+    /** @var TestCase $this */
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    $tournament = Tournament::create([
+        'tournament_name' => 'National Open 2026',
+        'location' => 'Peshawar',
+        'start_date' => now()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'status' => 'draft',
+        'admin_id' => $admin->id,
+    ]);
+
+    $event = Event::create([
+        'tournament_id' => $tournament->id,
+        'event_name' => 'National Open Singles',
+        'event_type' => Event::EVENT_TYPE_SINGLES,
+    ]);
+
+    $stage = Stage::create([
+        'event_id' => $event->id,
+        'name' => 'Round of 16',
+        'best_of' => 3,
+        'order_index' => 1,
+        'status' => 'pending',
+    ]);
+
+    MatchModel::create([
+        'stage_id' => $stage->id,
+        'tie_id' => null,
+        'side_a_label' => 'A',
+        'side_b_label' => 'B',
+        'match_order' => 1,
+        'best_of' => 3,
+        'status' => 'pending',
+        'winner_side' => null,
+        'umpire_name' => null,
+        'service_judge_name' => null,
+        'court' => null,
+        'started_at' => null,
+        'ended_at' => null,
+    ]);
+
+    MatchModel::create([
+        'stage_id' => $stage->id,
+        'tie_id' => null,
+        'side_a_label' => 'C',
+        'side_b_label' => 'D',
+        'match_order' => 2,
+        'best_of' => 3,
+        'status' => 'completed',
+        'winner_side' => 'a',
+        'umpire_name' => null,
+        'service_judge_name' => null,
+        'court' => null,
+        'started_at' => null,
+        'ended_at' => now(),
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test('pages::event', [
+        'tournament' => $tournament->id,
+        'event' => $event->id,
+    ])
+        ->assertOk()
+        ->assertSee('Round of 16')
+        ->assertSee('data-stage-stat-total="2"', false)
+        ->assertSee('data-stage-stat-remaining="1"', false)
+        ->assertSee('data-stage-stat-participants="4"', false);
 });
 
 test('stage route resolves for attached users', function (): void {
@@ -486,6 +700,7 @@ test('admin can create team ties and linked teams from stage setup', function ()
 
     expect(Team::query()->where('event_id', $event->id)->count())->toBe(4);
     expect(Tie::query()->where('stage_id', $stage->id)->count())->toBe(2);
+    expect(MatchModel::query()->where('stage_id', $stage->id)->count())->toBe(10);
 });
 
 test('singles bye auto-completes match and sets winner side', function (): void {
@@ -633,4 +848,87 @@ test('team tie bye auto-completes tie and sets winner team', function (): void {
     expect($tie->status)->toBe('completed');
     expect($tie->winnerTeam)->not()->toBeNull();
     expect($tie->winnerTeam->name)->toBe('Falcons');
+
+    $matches = MatchModel::query()->where('tie_id', $tie->id)->get();
+    expect($matches)->toHaveCount(5);
+    $statuses = $matches->pluck('status')->unique()->values();
+    expect($statuses)->toHaveCount(1);
+    expect($statuses->first())->toBe('not_required');
+});
+
+test('admin can bulk enter scores for pending match', function (): void {
+    $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+    $tournament = Tournament::create([
+        'tournament_name' => 'National Open 2026',
+        'location' => 'Peshawar',
+        'start_date' => now()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'status' => 'draft',
+        'admin_id' => $admin->id,
+    ]);
+    $event = Event::create([
+        'tournament_id' => $tournament->id,
+        'event_name' => 'Singles',
+        'event_type' => Event::EVENT_TYPE_SINGLES,
+    ]);
+    $stage = Stage::create([
+        'event_id' => $event->id,
+        'name' => 'Final',
+        'best_of' => 3,
+        'order_index' => 1,
+        'status' => 'pending',
+    ]);
+    $match = MatchModel::create([
+        'stage_id' => $stage->id,
+        'tie_id' => null,
+        'side_a_label' => 'Alice',
+        'side_b_label' => 'Bob',
+        'match_order' => null,
+        'best_of' => 3,
+        'status' => 'pending',
+        'winner_side' => null,
+        'umpire_name' => null,
+        'service_judge_name' => null,
+        'court' => null,
+        'started_at' => null,
+        'ended_at' => null,
+    ]);
+    MatchPlayer::create(['match_id' => $match->id, 'side' => 'a', 'player_name' => 'Alice', 'position' => 1]);
+    MatchPlayer::create(['match_id' => $match->id, 'side' => 'b', 'player_name' => 'Bob', 'position' => 1]);
+
+    $this->actingAs($admin);
+
+    Livewire::test('pages::event.stage', [
+        'tournament' => $tournament->id,
+        'event' => $event->id,
+        'stage' => $stage->id,
+    ])
+        ->assertOk()
+        ->call('openBulkScoreModal', $match->id)
+        ->assertSet('showBulkScoreModal', true)
+        ->assertSet('bulkScoreMatchId', $match->id)
+        ->set('bulkScores.1.score_a', '21')
+        ->set('bulkScores.1.score_b', '15')
+        ->set('bulkScores.2.score_a', '15')
+        ->set('bulkScores.2.score_b', '21')
+        ->set('bulkScores.3.score_a', '21')
+        ->set('bulkScores.3.score_b', '18')
+        ->call('submitBulkScores')
+        ->assertHasNoErrors()
+        ->assertSet('showBulkScoreModal', false);
+
+    $match->refresh();
+    expect($match->status)->toBe('completed');
+    expect($match->winner_side)->toBe('a');
+
+    $games = $match->games()->orderBy('game_number')->get();
+    expect($games)->toHaveCount(3);
+    expect($games[0]->entry_mode)->toBe('bulk');
+    expect($games[0]->score_a)->toBe(21);
+    expect($games[0]->score_b)->toBe(15);
+    expect($games[0]->winner_side)->toBe('a');
+
+    $bulkEvents = $match->matchEvents()->where('event_type', 'bulk_score_entry')->get();
+    expect($bulkEvents)->toHaveCount(3);
+    expect($bulkEvents[0]->notes)->toContain('offline_entry');
 });

@@ -57,4 +57,24 @@ class MatchModel extends Model
     {
         return $this->hasMany(MatchEvent::class, 'match_id');
     }
+
+    /**
+     * 1-based index among top-level matches on this stage (matches not part of a team tie), ordered by id.
+     */
+    public function topLevelSequenceInStage(): ?int
+    {
+        if ($this->tie_id !== null) {
+            return null;
+        }
+
+        $ids = static::query()
+            ->where('stage_id', $this->stage_id)
+            ->whereNull('tie_id')
+            ->orderBy('id')
+            ->pluck('id');
+
+        $index = $ids->search((int) $this->id);
+
+        return $index !== false ? $index + 1 : null;
+    }
 }

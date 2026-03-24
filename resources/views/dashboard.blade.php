@@ -34,7 +34,7 @@
                         <a  href="{{ route('tournaments.show', $tournament) }}"
                         wire:navigate class="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
                             <div class="space-y-2">
-                                {{-- <flux:heading class="text-lg font-semibold">{{ __('Your Tournament') }}</flux:heading> --}}
+                                <flux:heading class="text-lg font-semibold">{{ __('Your Tournament') }}</flux:heading>
                                 <div class="flex flex-wrap items-center gap-3">
                                     <span class="text-xl underline capitalize font-medium text-neutral-900 dark:text-white">
                                         {{ $tournament->tournament_name }}
