@@ -15,7 +15,7 @@ class LiveScoreController extends Controller
 
     public function allView(): View
     {
-        return view('live.placeholder', ['court' => null]);
+        return view('live.all', ['courts' => range(1, 5)]);
     }
 
     /**

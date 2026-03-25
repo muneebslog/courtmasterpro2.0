@@ -117,3 +117,14 @@ test('live court route rejects court numbers outside 1 to 5', function (): void 
     $this->get(route('live.court', ['court' => 9]))->assertNotFound();
     $this->getJson(route('api.live.court.score', ['court' => 0]))->assertNotFound();
 });
+
+test('live all page embeds court iframes for courts 1 through 5', function (): void {
+    $response = $this->get(route('live.all'));
+
+    $response->assertOk()
+        ->assertSee('<iframe', false);
+
+    foreach (range(1, 5) as $n) {
+        $response->assertSee(route('live.court', ['court' => $n]), false);
+    }
+});

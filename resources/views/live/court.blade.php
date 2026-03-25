@@ -278,6 +278,358 @@
             border: 2px solid #e8192f;
         }
     </style>
+
+    <style>
+        /* --- Hall screen scoreboard (ported from resources/views/Oldscorebord.html) --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            font-family: 'Arial Black', Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .court-tag {
+            position: fixed;
+            top: 6px;
+            left: 8px;
+            font-size: 9px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #444;
+            z-index: 2;
+        }
+
+        #load-err {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+            font-size: 14px;
+            color: #e8192f;
+            padding: 8px;
+            margin-bottom: 8px;
+        }
+
+        .idle {
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+            font-size: 18px;
+            padding: 40px 16px;
+            color: #888;
+            background: #1a1a1a;
+            border-radius: 4px;
+            border-left: 5px solid #e8192f;
+        }
+
+        .board {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            max-width: none;
+        }
+
+        .board.is-on {
+            display: block;
+        }
+
+        .board-inner {
+            width: 100%;
+            height: 100%;
+        }
+
+        .scoreboard-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 2vh 2vw;
+            gap: 2vh;
+            background: #000;
+        }
+
+        .footer {
+            background: #fff;
+            border: 0.5vh solid #000;
+            border-radius: 1.5vh;
+            padding: 2vh 3vw;
+            height: 12vh;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .footer-title {
+            font-size: 3vh;
+            font-weight: 900;
+            color: #000;
+            text-transform: uppercase;
+            letter-spacing: 0.2vw;
+            display: flex;
+            align-items: center;
+            gap: 2vw;
+        }
+
+        .footer-logo {
+            height: 60px;
+            width: auto;
+        }
+
+        .scoreboard {
+            flex: 1;
+            border: 0.5vh solid #000;
+            border-radius: 1.5vh;
+            display: flex;
+            flex-direction: column;
+            gap: 2vh;
+            background: #000;
+            padding: 2vh;
+        }
+
+        .teams-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2vh;
+        }
+
+        .team-row {
+            flex: 1;
+            background: linear-gradient(to right, #2a2a2a 0%, #1a1a1a 100%);
+            border: 0.4vh solid #444;
+            border-radius: 1.5vh;
+            display: flex;
+            align-items: center;
+            padding: 0 3vw;
+            box-shadow: 0 0.8vh 2vh rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .team-logo {
+            width: 10vh;
+            height: 10vh;
+            border-radius: 1vh;
+            margin-right: 2vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 0.3vh solid rgba(255, 255, 255, 0.1);
+            font-size: 5vh;
+        }
+
+        .logo-team1 {
+            background: linear-gradient(135deg, #2196f3 0%, #1565c0 100%);
+        }
+
+        .logo-team2 {
+            background: linear-gradient(135deg, #ff3d00 0%, #d50000 100%);
+        }
+
+        .team-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5vh;
+        }
+
+        .team-name {
+            color: #ffffff;
+            font-size: 8vh;
+            font-weight: 900;
+            letter-spacing: 0.2vw;
+            text-transform: uppercase;
+            text-shadow: 0.3vh 0.3vh 0.5vh rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 2vw;
+        }
+
+        .player-names {
+            color: #aaa;
+            font-size: 2.5vh;
+            font-weight: 600;
+        }
+
+        .shuttle-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            animation: bounce 0.6s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-1vh);
+            }
+        }
+
+        .shuttle-icon {
+            font-size: 8vh;
+            filter: drop-shadow(0 0 1vh rgba(255, 255, 255, 0.8));
+        }
+
+        .cards-container {
+            display: flex;
+            gap: 1vw;
+            align-items: center;
+            margin-left: 2vw;
+        }
+
+        .card-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5vw;
+            padding: 0.5vh 1vw;
+            border-radius: 0.8vh;
+            font-size: 3vh;
+            font-weight: 900;
+            border: 0.3vh solid rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0.3vh 0.8vh rgba(0, 0, 0, 0.4);
+        }
+
+        .yellow-card-badge {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #000;
+        }
+
+        .red-card-badge {
+            background: linear-gradient(135deg, #ff1744 0%, #d50000 100%);
+            color: #fff;
+            animation: pulse-red 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-red {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(1.05);
+            }
+        }
+
+        .card-count {
+            font-size: 3.5vh;
+            min-width: 3vw;
+            text-align: center;
+        }
+
+        .scores {
+            display: flex;
+            gap: 1.5vw;
+            align-items: center;
+        }
+
+        .round-score {
+            background: #790d0d;
+            color: #fff;
+            border-radius: 1vh;
+            font-size: 18vh;
+            font-weight: 900;
+            min-width: 7vw;
+            text-align: center;
+            border: 0.3vh solid #333;
+            box-shadow: inset 0 0.5vh 1vh rgba(0, 0, 0, 0.8);
+            font-family: 'Impact', 'Arial Black', sans-serif;
+        }
+
+        .current-score {
+            background: linear-gradient(135deg, #d50000 0%, #8b0000 100%);
+            color: #fff;
+            border-radius: 1vh;
+            font-size: 15vh;
+            font-weight: 900;
+            min-width: 9vw;
+            text-align: center;
+            border: 0.4vh solid #ff1744;
+            box-shadow: 0 0.5vh 2vh rgba(213, 0, 0, 0.6), inset 0 -0.3vh 1vh rgba(0, 0, 0, 0.3);
+            font-family: 'Impact', 'Arial Black', sans-serif;
+        }
+
+        .wins-indicator {
+            background: linear-gradient(135deg, #ffd700 0%, #ffa000 100%);
+            color: #000;
+            padding: 1vh 1vw;
+            border-radius: 1vh;
+            font-size: 6vh;
+            font-weight: 900;
+            min-width: 6vw;
+            text-align: center;
+            border: 0.3vh solid #ffeb3b;
+            box-shadow: 0 0.5vh 1.5vh rgba(255, 215, 0, 0.4);
+        }
+
+        button {
+            background: rgba(213, 0, 0, 0.6);
+            border: 0.3vh solid #ff1744;
+            color: #fff;
+            padding: 1.5vh 1vw;
+            font-size: 1.8vh;
+            border-radius: 0.8vh;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            font-family: 'Arial Black', Arial, sans-serif;
+        }
+
+        button:hover {
+            background: rgba(213, 0, 0, 0.8);
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .subtext-container {
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+        }
+
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: #ff1744;
+            border: 3px solid #fff;
+            color: #fff;
+            font-size: 28px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 99999;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .fullscreen-btn:hover {
+            transform: scale(1.15);
+            background: #d50000;
+        }
+
+        .fullscreen-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
 </head>
 
 <body>
@@ -288,18 +640,66 @@
 
     <div id="board" class="board">
         <div class="board-inner" id="board-inner">
-            <div class="header">
-                <div class="header-left">
-                    <div id="banner-event" class="event-title"></div>
-                    <div id="banner-meta" class="header-meta"></div>
+            <div class="scoreboard-container" id="scoreboard-container">
+                <div class="footer">
+                    <div class="footer-title">
+                        <span id="banner-event" class="event-title"></span>
+                    </div>
+                    <div class="">
+                        <img src="https://v1.badmintonscorer.online/img/sponser.jpeg" alt="Logo" class="footer-logo">
+                    </div>
                 </div>
-                <div class="sponsor">
-                    <img src="{{ asset('imgs/scoreboard-sponsor.svg') }}" alt="{{ __('Sponsor') }}">
-                </div>
-            </div>
 
-            <div id="col-headers" class="col-headers"></div>
-            <div id="player-rows"></div>
+                <div class="scoreboard">
+                    <div class="teams-container">
+                        <!-- Team 1 -->
+                        <div class="team-row">
+                            <div class="team-logo logo-team1">🏸</div>
+
+                            <div class="team-info">
+                                <div class="team-name">
+                                    <span id="team1Name"></span>
+                                </div>
+
+                                <span id="shuttle1" class="shuttle-indicator"></span>
+                                <span id="team1Cards" class="cards-container"></span>
+
+                                <div class="subtext-container">
+                                    <span id="team1Sub"></span>
+                                </div>
+                            </div>
+
+                            <div class="scores" id="team1Scores">
+                                <div class="wins-indicator" id="team1Wins">0</div>
+                            </div>
+                        </div>
+
+                        <!-- Team 2 -->
+                        <div class="team-row">
+                            <div class="team-logo logo-team2">🏸</div>
+
+                            <div class="team-info">
+                                <div class="team-name">
+                                    <span id="team2Name"></span>
+                                </div>
+
+                                <span id="shuttle2" class="shuttle-indicator"></span>
+                                <span id="team2Cards" class="cards-container"></span>
+
+                                <div class="subtext-container">
+                                    <span id="team2Sub"></span>
+                                </div>
+                            </div>
+
+                            <div class="scores" id="team2Scores">
+                                <div class="wins-indicator" id="team2Wins">0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="fullscreenBtn" class="fullscreen-btn">⛶</button>
+            </div>
         </div>
     </div>
 
@@ -310,141 +710,73 @@
 
             var idleEl = document.getElementById('idle');
             var boardEl = document.getElementById('board');
-            var boardInnerEl = document.getElementById('board-inner');
             var errEl = document.getElementById('load-err');
-            var bannerEventEl = document.getElementById('banner-event');
-            var bannerMetaEl = document.getElementById('banner-meta');
-            var colHeadersEl = document.getElementById('col-headers');
-            var playerRowsEl = document.getElementById('player-rows');
 
-            function splitPlayerLabel(label) {
-                if (!label) {
-                    return { name: '—', sub: '' };
-                }
-                var parts = label.split(/\s*\|\s*|\n\r?|\r/);
-                if (parts.length > 1) {
-                    return { name: parts[0].trim(), sub: parts.slice(1).join(' · ').trim() };
-                }
-                return { name: label.trim(), sub: '' };
+            var bannerEventEl = document.getElementById('banner-event');
+
+            var team1NameEl = document.getElementById('team1Name');
+            var team2NameEl = document.getElementById('team2Name');
+            var team1SubEl = document.getElementById('team1Sub');
+            var team2SubEl = document.getElementById('team2Sub');
+
+            var team1ScoresEl = document.getElementById('team1Scores');
+            var team2ScoresEl = document.getElementById('team2Scores');
+            var team1WinsEl = document.getElementById('team1Wins');
+            var team2WinsEl = document.getElementById('team2Wins');
+
+            function clamp(n, min, max) {
+                if (n < min) return min;
+                if (n > max) return max;
+                return n;
             }
 
             function buildSlots(m) {
                 var best = m.best_of ? parseInt(m.best_of, 10) : 3;
-                if (best < 1) {
-                    best = 1;
-                }
-                if (best > 5) {
-                    best = 5;
-                }
+                best = clamp(best, 1, 5);
+
                 var games = m.games || [];
                 var slots = [];
-                var i;
-                var j;
-                for (i = 1; i <= best; i++) {
+
+                for (var i = 1; i <= best; i++) {
                     var g = null;
-                    for (j = 0; j < games.length; j++) {
+
+                    for (var j = 0; j < games.length; j++) {
                         if (parseInt(games[j].game_number, 10) === i) {
                             g = games[j];
                             break;
                         }
                     }
+
                     if (g) {
                         slots.push(g);
                     } else {
                         slots.push({ game_number: i, score_a: 0, score_b: 0, winner_side: null });
                     }
                 }
+
                 return slots;
             }
 
-            function activeSlotIndex(slots) {
-                var i;
-                for (i = 0; i < slots.length; i++) {
-                    if (!slots[i].winner_side) {
-                        return i;
-                    }
-                }
-                return slots.length ? slots.length - 1 : 0;
-            }
-
-            function formatSetScore(n) {
+            function formatScore(n) {
                 n = parseInt(n, 10);
-                if (isNaN(n)) {
-                    n = 0;
-                }
-                if (n < 10) {
-                    return '0' + n;
-                }
+                if (isNaN(n)) n = 0;
+                if (n < 10) return '0' + n;
                 return String(n);
             }
 
-            function scoreClassForCell(side, slot, setIndex, activeIdx) {
-                var ws = slot.winner_side;
-                if (ws === 'a' || ws === 'b') {
-                    if (side === ws) {
-                        return 'score won';
-                    }
-                    return 'score lost';
-                }
-                if (setIndex === activeIdx) {
-                    return 'score current';
-                }
-                return 'score lost';
+            function createScoreCell(className, value) {
+                var el = document.createElement('div');
+                el.className = className;
+                // Match the original markup spacing (e.g. "&nbsp;09&nbsp;").
+                el.textContent = '\u00A0' + formatScore(value) + '\u00A0';
+                return el;
             }
 
-            function renderColHeaders(nSets) {
-                colHeadersEl.innerHTML = '';
-                colHeadersEl.appendChild(document.createElement('span'));
-                colHeadersEl.appendChild(document.createElement('span'));
-                var i;
-                for (i = 0; i < nSets; i++) {
-                    var sp = document.createElement('span');
-                    sp.textContent = '{{ __('Set') }} ' + (i + 1);
-                    colHeadersEl.appendChild(sp);
+            function clearSlotCells(scoresEl) {
+                // Keep the first child (wins indicator) and remove the rest.
+                while (scoresEl.children.length > 1) {
+                    scoresEl.removeChild(scoresEl.lastElementChild);
                 }
-            }
-
-            function renderPlayerRow(side, num, label, slots, activeIdx, matchWinnerSide) {
-                var parts = splitPlayerLabel(label);
-                var row = document.createElement('div');
-                row.className = 'row';
-                if (matchWinnerSide && side === matchWinnerSide) {
-                    row.className += ' winner';
-                }
-
-                var nameWrap = document.createElement('div');
-                nameWrap.className = 'name';
-                var nameEl = document.createElement('div');
-                nameEl.className = 'player-name';
-                nameEl.textContent = parts.name;
-                nameEl.title = label || '';
-                nameWrap.appendChild(nameEl);
-                if (parts.sub) {
-                    var teamEl = document.createElement('div');
-                    teamEl.className = 'player-team';
-                    teamEl.textContent = parts.sub;
-                    teamEl.title = parts.sub;
-                    nameWrap.appendChild(teamEl);
-                }
-
-                var seed = document.createElement('div');
-                seed.className = 'seed';
-                seed.textContent = String(num);
-
-                row.appendChild(nameWrap);
-                row.appendChild(seed);
-
-                var i;
-                for (i = 0; i < slots.length; i++) {
-                    var slot = slots[i];
-                    var cell = document.createElement('div');
-                    cell.className = scoreClassForCell(side, slot, i, activeIdx);
-                    var score = side === 'a' ? slot.score_a : slot.score_b;
-                    cell.textContent = formatSetScore(score);
-                    row.appendChild(cell);
-                }
-
-                return row;
             }
 
             function applyPayload(data) {
@@ -462,29 +794,53 @@
                 boardEl.className = 'board is-on';
 
                 bannerEventEl.textContent = m.event_name || '{{ __('Match') }}';
+                team1NameEl.textContent = m.side_a_label || '—';
+                team2NameEl.textContent = m.side_b_label || '—';
 
-                var metaBits = [];
-                if (m.stage_name) {
-                    metaBits.push(m.stage_name);
-                }
-                metaBits.push('{{ __('Court') }} {{ $court }}');
-                if (m.best_of) {
-                    metaBits.push('{{ __('Best of') }} ' + m.best_of);
-                }
-                bannerMetaEl.textContent = metaBits.join(' · ');
+                var subText = m.stage_name || '';
+                team1SubEl.textContent = subText;
+                team2SubEl.textContent = subText;
 
                 var slots = buildSlots(m);
-                var n = slots.length;
-                boardInnerEl.style.setProperty('--set-cols', String(n));
 
-                var activeIdx = activeSlotIndex(slots);
-                var matchWinner = m.winner_side || null;
+                // "Yellow box" = number of games won by each side.
+                var winsA = 0;
+                var winsB = 0;
+                for (var k = 0; k < slots.length; k++) {
+                    if (slots[k].winner_side === 'a') winsA++;
+                    if (slots[k].winner_side === 'b') winsB++;
+                }
+                team1WinsEl.textContent = String(winsA);
+                team2WinsEl.textContent = String(winsB);
 
-                renderColHeaders(n);
+                clearSlotCells(team1ScoresEl);
+                clearSlotCells(team2ScoresEl);
 
-                playerRowsEl.innerHTML = '';
-                playerRowsEl.appendChild(renderPlayerRow('a', 1, m.side_a_label, slots, activeIdx, matchWinner));
-                playerRowsEl.appendChild(renderPlayerRow('b', 2, m.side_b_label, slots, activeIdx, matchWinner));
+                // Active game is the first slot without a winner_side, unless the match is finished.
+                var activeIdx = null;
+                if (!m.winner_side) {
+                    for (var i = 0; i < slots.length; i++) {
+                        if (!slots[i].winner_side) {
+                            activeIdx = i;
+                            break;
+                        }
+                    }
+                }
+
+                for (var idx = 0; idx < slots.length; idx++) {
+                    var slot = slots[idx];
+
+                    if (slot.winner_side === 'a' || slot.winner_side === 'b') {
+                        team1ScoresEl.appendChild(createScoreCell('round-score', slot.score_a));
+                        team2ScoresEl.appendChild(createScoreCell('round-score', slot.score_b));
+                        continue;
+                    }
+
+                    if (activeIdx !== null && idx === activeIdx) {
+                        team1ScoresEl.appendChild(createScoreCell('current-score', slot.score_a));
+                        team2ScoresEl.appendChild(createScoreCell('current-score', slot.score_b));
+                    }
+                }
             }
 
             function poll() {
@@ -507,6 +863,15 @@
                     }
                 };
                 xhr.send(null);
+            }
+
+            // Optional: fullscreen support for the live hall screen.
+            var fullscreenBtn = document.getElementById('fullscreenBtn');
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', function () {
+                    var el = document.documentElement;
+                    if (el.requestFullscreen) el.requestFullscreen();
+                });
             }
 
             poll();

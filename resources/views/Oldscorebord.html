@@ -1,0 +1,547 @@
+
+<!DOCTYPE html>
+<html lang="en" class="dark">
+    <head>
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+        <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>Event Matches</title>
+
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.bunny.net">
+<link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+
+<link rel="preload" as="style" href="https://v1.badmintonscorer.online/build/assets/app-BPZnHV_B.css" /><link rel="modulepreload" as="script" href="https://v1.badmintonscorer.online/build/assets/app-l0sNRNKZ.js" /><link rel="stylesheet" href="https://v1.badmintonscorer.online/build/assets/app-BPZnHV_B.css" data-navigate-track="reload" /><script type="module" src="https://v1.badmintonscorer.online/build/assets/app-l0sNRNKZ.js" data-navigate-track="reload"></script><style>
+    :root.dark {
+        color-scheme: dark;
+    }
+</style>
+<script>
+    window.Flux = {
+        applyAppearance (appearance) {
+            let applyDark = () => document.documentElement.classList.add('dark')
+            let applyLight = () => document.documentElement.classList.remove('dark')
+
+            if (appearance === 'system') {
+                let media = window.matchMedia('(prefers-color-scheme: dark)')
+
+                window.localStorage.removeItem('flux.appearance')
+
+                media.matches ? applyDark() : applyLight()
+            } else if (appearance === 'dark') {
+                window.localStorage.setItem('flux.appearance', 'dark')
+
+                applyDark()
+            } else if (appearance === 'light') {
+                window.localStorage.setItem('flux.appearance', 'light')
+
+                applyLight()
+            }
+        }
+    }
+
+    window.Flux.applyAppearance(window.localStorage.getItem('flux.appearance') || 'system')
+</script>
+    <!-- Livewire Styles --><style >[wire\:loading][wire\:loading], [wire\:loading\.delay][wire\:loading\.delay], [wire\:loading\.inline-block][wire\:loading\.inline-block], [wire\:loading\.inline][wire\:loading\.inline], [wire\:loading\.block][wire\:loading\.block], [wire\:loading\.flex][wire\:loading\.flex], [wire\:loading\.table][wire\:loading\.table], [wire\:loading\.grid][wire\:loading\.grid], [wire\:loading\.inline-flex][wire\:loading\.inline-flex] {display: none;}[wire\:loading\.delay\.none][wire\:loading\.delay\.none], [wire\:loading\.delay\.shortest][wire\:loading\.delay\.shortest], [wire\:loading\.delay\.shorter][wire\:loading\.delay\.shorter], [wire\:loading\.delay\.short][wire\:loading\.delay\.short], [wire\:loading\.delay\.default][wire\:loading\.delay\.default], [wire\:loading\.delay\.long][wire\:loading\.delay\.long], [wire\:loading\.delay\.longer][wire\:loading\.delay\.longer], [wire\:loading\.delay\.longest][wire\:loading\.delay\.longest] {display: none;}[wire\:offline][wire\:offline] {display: none;}[wire\:dirty]:not(textarea):not(input):not(select) {display: none;}:root {--livewire-progress-bar-color: #2299dd;}[x-cloak] {display: none !important;}[wire\:cloak] {display: none !important;}</style>
+</head>
+    <body class="min-h-screen bg-white dark:bg-zinc-800"><!-- Livewire Scripts -->
+<script src="/livewire/livewire.js?id=df3a17f2"   data-csrf="qS7OzKrKjzfXajhrMC0rfOk6B4sBzbQzvLFQZpsL" data-update-uri="/livewire/update" data-navigate-once="true"></script>
+</body>
+    <div class="[grid-area:main] p-6 lg:p-8 [[data-flux-container]_&amp;]:px-0" data-flux-main>
+    <div wire:snapshot="{&quot;data&quot;:{&quot;match&quot;:[null,{&quot;class&quot;:&quot;App\\Models\\Game&quot;,&quot;key&quot;:237,&quot;s&quot;:&quot;mdl&quot;}],&quot;roundscount&quot;:3,&quot;winnerData&quot;:null,&quot;serve&quot;:null,&quot;yellowCards&quot;:[[],{&quot;s&quot;:&quot;arr&quot;}],&quot;redCards&quot;:[[],{&quot;s&quot;:&quot;arr&quot;}]},&quot;memo&quot;:{&quot;id&quot;:&quot;vqSFaqug7LAvRhMgpeij&quot;,&quot;name&quot;:&quot;scoreboard&quot;,&quot;path&quot;:&quot;score\/237&quot;,&quot;method&quot;:&quot;GET&quot;,&quot;children&quot;:[],&quot;scripts&quot;:[],&quot;assets&quot;:[],&quot;errors&quot;:[],&quot;locale&quot;:&quot;en&quot;},&quot;checksum&quot;:&quot;cb8ead97430d9856acc32b218993985a8c30025dc0d1402bdc8a0a88d48fa613&quot;}" wire:effects="[]" wire:id="vqSFaqug7LAvRhMgpeij">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            font-family: 'Arial Black', Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .scoreboard-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 2vh 2vw;
+            gap: 2vh;
+            background: #000;
+        }
+
+        .footer {
+            background: #fff;
+            border: 0.5vh solid #000;
+            border-radius: 1.5vh;
+            padding: 2vh 3vw;
+            height: 12vh;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .footer-title {
+            font-size: 3vh;
+            font-weight: 900;
+            color: #000;
+            text-transform: uppercase;
+            letter-spacing: 0.2vw;
+            display: flex;
+            align-items: center;
+            gap: 2vw;
+        }
+
+        .footer-logo {
+            height: 60px;
+            width: auto;
+        }
+
+        .scoreboard {
+            flex: 1;
+            border: 0.5vh solid #000;
+            border-radius: 1.5vh;
+            display: flex;
+            flex-direction: column;
+            gap: 2vh;
+            background: #000;
+            padding: 2vh;
+        }
+
+        .teams-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2vh;
+        }
+
+        .team-row {
+            flex: 1;
+            background: linear-gradient(to right, #2a2a2a 0%, #1a1a1a 100%);
+            border: 0.4vh solid #444;
+            border-radius: 1.5vh;
+            display: flex;
+            align-items: center;
+            padding: 0 3vw;
+            box-shadow: 0 0.8vh 2vh rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .team-logo {
+            width: 10vh;
+            height: 10vh;
+            border-radius: 1vh;
+            margin-right: 2vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 0.3vh solid rgba(255, 255, 255, 0.1);
+            font-size: 5vh;
+        }
+
+        .logo-team1 {
+            background: linear-gradient(135deg, #2196f3 0%, #1565c0 100%);
+        }
+
+        .logo-team2 {
+            background: linear-gradient(135deg, #ff3d00 0%, #d50000 100%);
+        }
+
+        .team-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5vh;
+        }
+
+        .team-name {
+            color: #ffffff;
+            font-size: 8vh;
+            font-weight: 900;
+            letter-spacing: 0.2vw;
+            text-transform: uppercase;
+            text-shadow: 0.3vh 0.3vh 0.5vh rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 2vw;
+        }
+
+        .player-names {
+            color: #aaa;
+            font-size: 2.5vh;
+            font-weight: 600;
+        }
+
+        .shuttle-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            animation: bounce 0.6s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-1vh);
+            }
+        }
+
+        .shuttle-icon {
+            font-size: 8vh;
+            filter: drop-shadow(0 0 1vh rgba(255, 255, 255, 0.8));
+        }
+
+        .cards-container {
+            display: flex;
+            gap: 1vw;
+            align-items: center;
+            margin-left: 2vw;
+        }
+
+        .card-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5vw;
+            padding: 0.5vh 1vw;
+            border-radius: 0.8vh;
+            font-size: 3vh;
+            font-weight: 900;
+            border: 0.3vh solid rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0.3vh 0.8vh rgba(0, 0, 0, 0.4);
+        }
+
+        .yellow-card-badge {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #000;
+        }
+
+        .red-card-badge {
+            background: linear-gradient(135deg, #ff1744 0%, #d50000 100%);
+            color: #fff;
+            animation: pulse-red 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-red {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(1.05);
+            }
+        }
+
+        .card-count {
+            font-size: 3.5vh;
+            min-width: 3vw;
+            text-align: center;
+        }
+
+        .scores {
+            display: flex;
+            gap: 1.5vw;
+            align-items: center;
+        }
+
+        .round-score {
+            background: #790d0d;
+            color: #fff;
+            border-radius: 1vh;
+            font-size: 18vh;
+            font-weight: 900;
+            min-width: 7vw;
+            text-align: center;
+            border: 0.3vh solid #333;
+            box-shadow: inset 0 0.5vh 1vh rgba(0, 0, 0, 0.8);
+            font-family: 'Impact', 'Arial Black', sans-serif;
+        }
+
+        .current-score {
+            background: linear-gradient(135deg, #d50000 0%, #8b0000 100%);
+            color: #fff;
+            border-radius: 1vh;
+            font-size: 15vh;
+            font-weight: 900;
+            min-width: 9vw;
+            text-align: center;
+            border: 0.4vh solid #ff1744;
+            box-shadow: 0 0.5vh 2vh rgba(213, 0, 0, 0.6), inset 0 -0.3vh 1vh rgba(0, 0, 0, 0.3);
+            font-family: 'Impact', 'Arial Black', sans-serif;
+        }
+
+        .wins-indicator {
+            background: linear-gradient(135deg, #ffd700 0%, #ffa000 100%);
+            color: #000;
+            padding: 1vh 1vw;
+            border-radius: 1vh;
+            font-size: 6vh;
+            font-weight: 900;
+            min-width: 6vw;
+            text-align: center;
+            border: 0.3vh solid #ffeb3b;
+            box-shadow: 0 0.5vh 1.5vh rgba(255, 215, 0, 0.4);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 1vh;
+            margin-top: 2vh;
+            padding-top: 2vh;
+            border-top: 0.2vh solid #444;
+        }
+
+        button {
+            background: rgba(213, 0, 0, 0.6);
+            border: 0.3vh solid #ff1744;
+            color: #fff;
+            padding: 1.5vh 1vw;
+            font-size: 1.8vh;
+            border-radius: 0.8vh;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            font-family: 'Arial Black', Arial, sans-serif;
+        }
+
+        button:hover {
+            background: rgba(213, 0, 0, 0.8);
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .control-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1vh;
+        }
+
+        .control-label {
+            color: #fff;
+            font-size: 1.5vh;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .sponsor-image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 220px;
+            height: 80px;
+            background-color: #ffffff;
+            border: 2px solid #ff6b35;
+            border-radius: 10px;
+            padding: 5px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .sponsor-image img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .subtext-container {
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+        }
+
+        .fullscreen-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: #ff1744;
+            border: 3px solid #fff;
+            color: #fff;
+            font-size: 28px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 99999;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .fullscreen-btn:hover {
+            transform: scale(1.15);
+            background: #d50000;
+        }
+
+        .fullscreen-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+
+    <div class="scoreboard-container" id="scoreboard-container">
+        <div class="footer">
+            <div class="footer-title">
+                <span>Women&#039;s Singles </span>
+            </div>
+            <div class="">
+                <img src="https://v1.badmintonscorer.online/img/sponser.jpeg" alt="Logo" class="footer-logo">
+            </div>
+        </div>
+
+        <div class="scoreboard">
+            <div class="teams-container">
+                <!-- Team 1 -->
+                <div class="team-row">
+                    <div class="team-logo logo-team1">🏸</div>
+
+                    <div class="team-info">
+                        <div class="team-name">
+                            <span id="team1Name">
+
+                                <span id="team1Name">
+                                    Ghazala Siddique
+                                </span>
+
+
+
+
+
+
+                            </span>
+
+                        </div>
+                        <span id="shuttle1" class="shuttle-indicator" >
+                            
+                        </span>
+                        <span id="team1Cards" class="cards-container">
+                            
+                            
+                        </span>
+                        <div class="subtext-container">
+                            <span>
+                                                                    Wapda &nbsp;
+                                                            </span>
+                        </div>
+                        
+                    </div>
+
+                    <div class="scores">
+                        <div class="wins-indicator" id="team1Wins">1</div>
+                        
+                                                            <div class="round-score" id="team1R2">
+                                    &nbsp;10&nbsp;
+                                </div>
+                            
+
+                        
+                                                            <div class="round-score" id="team1R2">
+                                    &nbsp;21&nbsp;
+                                </div>
+                            
+
+                        
+                                                            <div class="current-score" id="team1Score">
+                                    &nbsp;09&nbsp;
+                                </div>
+                            
+
+                                            </div>
+                </div>
+
+                <!-- Team 2 -->
+                <div class="team-row">
+                    <div class="team-logo logo-team2">🏸</div>
+
+                    <div class="team-info">
+                        <div class="team-name">
+
+                            <span id="team2Name">
+                                <span id="team2Name">
+                                    Mahoor Shahzad
+                                </span>
+
+                            </span>
+                            </span>
+
+                            <span id="shuttle2" class="shuttle-indicator" >
+                                
+                            </span>
+                            <span id="team1Cards" class="cards-container">
+                                
+                            </span>
+                        </div>
+                        <div class="subtext-container">
+                            <span>
+                                                                    Wapda &nbsp;
+                                                            </span>
+                        </div>
+                        
+                    </div>
+
+                    <div class="scores">
+                        <div class="wins-indicator" id="team2Wins">2</div>
+                                                                                    <div class="round-score" id="team2R2">
+                                    &nbsp;21&nbsp;
+                                </div>
+                                                                                                                <div class="round-score" id="team2R2">
+                                    &nbsp;17&nbsp;
+                                </div>
+                                                                                                                <div class="current-score" id="team2Score">
+                                    &nbsp;21&nbsp;
+                                </div>
+                                                    
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button id="fullscreenBtn" class="fullscreen-btn">⛶</button>
+
+    </div>
+    
+
+    <script>
+        setInterval(() => {
+            fetch(window.location.href)
+                .then(r => r.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, "text/html");
+                    const newContent = doc.querySelector('#scoreboard-container');
+                    document.querySelector('#scoreboard-container').innerHTML = newContent.innerHTML;
+                });
+        }, 1000);
+
+    </script>
+
+
+
+
+
+
+
+</div>
+</div>
+    </html>

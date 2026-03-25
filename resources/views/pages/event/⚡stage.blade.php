@@ -724,9 +724,10 @@ new class extends Component {
                                             <span @class([
                                                 'rounded-full px-2.5 py-0.5 text-xs font-medium',
                                                 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' => $tie->status === 'completed',
+                                                'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-400' => $tie->status === 'in_progress',
                                                 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' => $tie->status === 'pending',
                                             ])>
-                                                {{ $tie->status === 'completed' ? __('Completed') : __('Pending') }}
+                                                {{ $tie->status === 'completed' ? __('Completed') : ($tie->status === 'in_progress' ? __('In Progress') : __('Pending')) }}
                                             </span>
                                             @if ($canManageTournament && $tie->status === 'pending' && $tie->matches->every(fn ($m) => $m->status === 'pending'))
                                                 <flux:button
@@ -799,11 +800,13 @@ new class extends Component {
                                 @php
                                     $winnerLabel = $match->winner_side === 'a' ? $match->side_a_label : ($match->winner_side === 'b' ? $match->side_b_label : null);
                                     $matchEnded = in_array($match->status, ['completed', 'walkover', 'retired', 'not_required'], true);
+                                    $matchInProgress = $match->status === 'in_progress';
                                     $statusLabels = [
                                         'completed' => __('Completed'),
                                         'walkover' => __('Walkover'),
                                         'retired' => __('Retired'),
                                         'not_required' => __('NOT REQUIRED'),
+                                        'in_progress' => __('In Progress'),
                                     ];
                                 @endphp
                                 <div class="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm dark:border-neutral-700 dark:bg-neutral-800">
@@ -813,9 +816,10 @@ new class extends Component {
                                             <span @class([
                                                 'rounded-full px-2.5 py-0.5 text-xs font-medium',
                                                 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' => $matchEnded,
-                                                'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' => ! $matchEnded,
+                                                'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-400' => $matchInProgress,
+                                                'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' => ! $matchEnded && ! $matchInProgress,
                                             ])>
-                                                {{ $matchEnded ? ($statusLabels[$match->status] ?? __('Completed')) : __('Pending') }}
+                                                {{ $matchEnded ? ($statusLabels[$match->status] ?? __('Completed')) : ($matchInProgress ? ($statusLabels['in_progress'] ?? __('In Progress')) : __('Pending')) }}
                                             </span>
                                             <span class="text-xs font-normal text-neutral-400 dark:text-neutral-500">id {{ $match->id }}</span>
                                         </div>
@@ -843,13 +847,15 @@ new class extends Component {
                                                 >
                                                     {{ __('Start') }}
                                                 </flux:button>
-                                                <flux:button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    wire:click="openBulkScoreModal({{ $match->id }})"
-                                                >
-                                                    {{ __('Enter Scores') }}
-                                                </flux:button>
+                                                @if (auth()->user()?->role === User::ROLE_ADMIN)
+                                                    <flux:button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        wire:click="openBulkScoreModal({{ $match->id }})"
+                                                    >
+                                                        {{ __('Enter Scores') }}
+                                                    </flux:button>
+                                                @endif
                                                 @if ($canManageTournament && ! $isTeamInnerMatch && $match->status === 'pending')
                                                     <flux:button
                                                         type="button"
