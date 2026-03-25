@@ -5,6 +5,22 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ __('Court') }} {{ $court }} — {{ __('Live') }}</title>
+    <link rel="canonical" href="{{ url()->current() }}">
+    <meta name="description" content="Live badminton match scores for Court {{ $court }} on CourtMaster.">
+    <meta name="robots" content="index,follow">
+
+    <meta property="og:title" content="{{ __('Court') }} {{ $court }} — {{ __('Live') }}">
+    <meta property="og:description"
+        content="Live badminton match scores for Court {{ $court }} on CourtMaster.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:image" content="{{ asset('imgs/hero.png') }}">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ __('Court') }} {{ $court }} — {{ __('Live') }}">
+    <meta name="twitter:description"
+        content="Live badminton match scores for Court {{ $court }} on CourtMaster.">
+    <meta name="twitter:image" content="{{ asset('imgs/hero.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * {

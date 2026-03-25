@@ -7,7 +7,24 @@
 
     <title>CourtMaster Pro</title>
 
-    
+    <link rel="canonical" href="{{ url()->current() }}">
+    <meta name="description"
+        content="Manage draws, track shuttlecock inventory, and oversee live match scoring with our unified tournament dashboard.">
+    <meta name="robots" content="index,follow">
+
+    <meta property="og:title" content="CourtMaster Pro">
+    <meta property="og:description"
+        content="Manage draws, track shuttlecock inventory, and oversee live match scoring with our unified tournament dashboard.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:image" content="{{ asset('imgs/hero.png') }}">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CourtMaster Pro">
+    <meta name="twitter:description"
+        content="Manage draws, track shuttlecock inventory, and oversee live match scoring with our unified tournament dashboard.">
+    <meta name="twitter:image" content="{{ asset('imgs/hero.png') }}">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />

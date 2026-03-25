@@ -3,10 +3,13 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LiveScoreController;
 use App\Http\Controllers\MatchPdfController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\TournamentController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+
+Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.index');
 
 Route::get('live/court/{court}', [LiveScoreController::class, 'courtView'])
     ->where('court', '[1-5]')

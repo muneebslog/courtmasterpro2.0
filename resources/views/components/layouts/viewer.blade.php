@@ -1,18 +1,41 @@
 @props([
     'title' => null,
+    'description' => null,
+    'image' => null,
 ])
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scheme-dark dark">
     <head>
+        @php
+            $pageTitle = filled($title ?? null) ? $title.' — '.config('app.name') : config('app.name');
+            $pageDescription = filled($description ?? null)
+                ? $description
+                : 'Public badminton scores and live match scoring for tournament brackets.';
+            $pageImage = filled($image ?? null) ? $image : asset('imgs/hero.png');
+            $canonicalUrl = url()->current();
+        @endphp
+
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=syne:600,700|dm-sans:400,500,600" rel="stylesheet" />
 
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>
-            {{ filled($title ?? null) ? $title.' — '.config('app.name') : config('app.name') }}
-        </title>
+        <title>{{ $pageTitle }}</title>
+        <link rel="canonical" href="{{ $canonicalUrl }}">
+        <meta name="description" content="{{ $pageDescription }}">
+        <meta name="robots" content="index,follow">
+
+        <meta property="og:title" content="{{ $pageTitle }}">
+        <meta property="og:description" content="{{ $pageDescription }}">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ $canonicalUrl }}">
+        <meta property="og:image" content="{{ $pageImage }}">
+
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ $pageTitle }}">
+        <meta name="twitter:description" content="{{ $pageDescription }}">
+        <meta name="twitter:image" content="{{ $pageImage }}">
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -20,6 +43,15 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @fluxAppearance
+        
+        <script type="application/ld+json">
+            {!! json_encode([
+                '@context' => 'https://schema.org',
+                '@type' => 'WebSite',
+                'name' => config('app.name'),
+                'url' => $canonicalUrl,
+            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
+        </script>
     </head>
     <body
         class="min-h-screen bg-[#0c1210] bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,rgba(34,197,94,0.12),transparent)] font-[family-name:var(--font-dm)] text-[#e8ece9] antialiased [--font-dm:'DM_Sans',ui-sans-serif,system-ui,sans-serif]"
