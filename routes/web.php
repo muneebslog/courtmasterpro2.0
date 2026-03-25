@@ -8,8 +8,22 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
-Route::get('live/court/{court}', [LiveScoreController::class, 'courtView'])->name('live.court');
+Route::get('live/court/{court}', [LiveScoreController::class, 'courtView'])
+    ->where('court', '[1-5]')
+    ->name('live.court');
 Route::get('live/all', [LiveScoreController::class, 'allView'])->name('live.all');
+
+Route::get('api/live/court/{court}', [LiveScoreController::class, 'courtScore'])
+    ->middleware('throttle:live-court-score')
+    ->where('court', '[1-5]')
+    ->name('api.live.court.score');
+
+Route::livewire('viewer/tournaments', 'pages::viewer.tournaments')->name('viewer.tournaments.index');
+Route::livewire('viewer/tournaments/{tournament}', 'pages::viewer.tournament')->name('viewer.tournaments.show');
+Route::livewire('viewer/tournaments/{tournament}/events/{event}', 'pages::viewer.event')->name('viewer.events.show');
+Route::livewire('viewer/tournaments/{tournament}/events/{event}/stages/{stage}', 'pages::viewer.stage')->name('viewer.stages.show');
+Route::livewire('viewer/tournaments/{tournament}/events/{event}/stages/{stage}/ties/{tie}', 'pages::viewer.tie')->name('viewer.ties.show');
+Route::livewire('viewer/tournaments/{tournament}/events/{event}/stages/{stage}/matches/{match}', 'pages::viewer.match')->name('viewer.matches.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
