@@ -13,6 +13,7 @@ class MatchPlayer extends Model
         'match_id',
         'side',
         'player_name',
+        'flag',
         'position',
     ];
 

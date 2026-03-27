@@ -22,6 +22,7 @@
     <meta name="twitter:title" content="{{ $title }}">
     <meta name="twitter:description" content="{{ __('Live match scores for all courts.') }}">
     <meta name="twitter:image" content="{{ asset('imgs/hero.png') }}">
+    <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
 
     <style>
         html,
@@ -342,6 +343,13 @@
             var i;
             for (i = 0; i < list.length; i++) {
                 grid.appendChild(renderCard(list[i]));
+            }
+
+            if (window.twemoji) {
+                window.twemoji.parse(grid, {
+                    folder: 'svg',
+                    ext: '.svg'
+                });
             }
         }
 

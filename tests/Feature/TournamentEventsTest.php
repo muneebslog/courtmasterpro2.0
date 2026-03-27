@@ -588,14 +588,20 @@ test('admin can create singles matches from stage setup', function (): void {
         ->assertOk()
         ->call('openCreationFlow')
         ->set('singleMatches.0.player_a', 'Ali')
+        ->set('singleMatches.0.player_a_flag', '🇵🇰')
         ->set('singleMatches.0.player_b', 'Hassan')
+        ->set('singleMatches.0.player_b_flag', '🇮🇳')
         ->set('singleMatches.1.player_a', 'Bilal')
+        ->set('singleMatches.1.player_a_flag', '🇬🇧')
         ->set('singleMatches.1.player_b', 'Usman')
+        ->set('singleMatches.1.player_b_flag', '🇺🇸')
         ->call('createSinglesMatches')
         ->assertHasNoErrors();
 
     expect(MatchModel::query()->where('stage_id', $stage->id)->count())->toBe(2);
     expect(MatchPlayer::query()->whereIn('match_id', MatchModel::query()->where('stage_id', $stage->id)->pluck('id'))->count())->toBe(4);
+    expect(MatchModel::query()->where('stage_id', $stage->id)->orderBy('id')->firstOrFail()->side_a_label)->toBe('🇵🇰 Ali');
+    expect(MatchModel::query()->where('stage_id', $stage->id)->orderBy('id')->firstOrFail()->side_b_label)->toBe('🇮🇳 Hassan');
 });
 
 test('admin can create doubles matches from stage setup', function (): void {
@@ -638,18 +644,28 @@ test('admin can create doubles matches from stage setup', function (): void {
         ->assertOk()
         ->call('openCreationFlow')
         ->set('doubleMatches.0.player_a_1', 'A1')
+        ->set('doubleMatches.0.player_a_1_flag', '🇵🇰')
         ->set('doubleMatches.0.player_a_2', 'A2')
+        ->set('doubleMatches.0.player_a_2_flag', '🇬🇧')
         ->set('doubleMatches.0.player_b_1', 'B1')
+        ->set('doubleMatches.0.player_b_1_flag', '🇺🇸')
         ->set('doubleMatches.0.player_b_2', 'B2')
+        ->set('doubleMatches.0.player_b_2_flag', '🇩🇪')
         ->set('doubleMatches.1.player_a_1', 'C1')
+        ->set('doubleMatches.1.player_a_1_flag', '🇮🇩')
         ->set('doubleMatches.1.player_a_2', 'C2')
+        ->set('doubleMatches.1.player_a_2_flag', '🇲🇾')
         ->set('doubleMatches.1.player_b_1', 'D1')
+        ->set('doubleMatches.1.player_b_1_flag', '🇯🇵')
         ->set('doubleMatches.1.player_b_2', 'D2')
+        ->set('doubleMatches.1.player_b_2_flag', '🇨🇳')
         ->call('createDoublesMatches')
         ->assertHasNoErrors();
 
     expect(MatchModel::query()->where('stage_id', $stage->id)->count())->toBe(2);
     expect(MatchPlayer::query()->whereIn('match_id', MatchModel::query()->where('stage_id', $stage->id)->pluck('id'))->count())->toBe(8);
+    expect(MatchModel::query()->where('stage_id', $stage->id)->orderBy('id')->firstOrFail()->side_a_label)->toContain('🇵🇰 A1');
+    expect(MatchModel::query()->where('stage_id', $stage->id)->orderBy('id')->firstOrFail()->side_b_label)->toContain('🇺🇸 B1');
 });
 
 test('admin can create team ties and linked teams from stage setup', function (): void {
@@ -692,15 +708,76 @@ test('admin can create team ties and linked teams from stage setup', function ()
         ->assertOk()
         ->call('openCreationFlow')
         ->set('teamTies.0.team_a_name', 'Falcons')
+        ->set('teamTies.0.team_a_flag', '🇵🇰')
         ->set('teamTies.0.team_b_name', 'Eagles')
+        ->set('teamTies.0.team_b_flag', '🇺🇸')
         ->set('teamTies.1.team_a_name', 'Tigers')
+        ->set('teamTies.1.team_a_flag', '🇬🇧')
         ->set('teamTies.1.team_b_name', 'Lions')
+        ->set('teamTies.1.team_b_flag', '🇩🇪')
         ->call('createTeamTies')
         ->assertHasNoErrors();
 
     expect(Team::query()->where('event_id', $event->id)->count())->toBe(4);
+    expect(Team::query()->where('event_id', $event->id)->where('name', 'Falcons')->firstOrFail()->flag)->toBe('🇵🇰');
+    expect(Team::query()->where('event_id', $event->id)->where('name', 'Eagles')->firstOrFail()->flag)->toBe('🇺🇸');
     expect(Tie::query()->where('stage_id', $stage->id)->count())->toBe(2);
     expect(MatchModel::query()->where('stage_id', $stage->id)->count())->toBe(10);
+});
+
+test('admin can add team player from team players tab', function (): void {
+    /** @var TestCase $this */
+    /** @var User $admin */
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    $tournament = Tournament::create([
+        'tournament_name' => 'National Open 2026',
+        'location' => 'Peshawar',
+        'start_date' => now()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'status' => 'draft',
+        'admin_id' => $admin->id,
+    ]);
+
+    $event = Event::create([
+        'tournament_id' => $tournament->id,
+        'event_name' => 'National Open Team',
+        'event_type' => Event::EVENT_TYPE_TEAM,
+    ]);
+
+    $team = Team::create([
+        'event_id' => $event->id,
+        'name' => 'Falcons',
+        'flag' => '🇵🇰',
+    ]);
+
+    $stage = Stage::create([
+        'event_id' => $event->id,
+        'name' => 'Final',
+        'best_of' => 5,
+        'order_index' => 1,
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test('pages::event.stage', [
+        'tournament' => $tournament->id,
+        'event' => $event->id,
+        'stage' => $stage->id,
+    ])
+        ->assertOk()
+        ->call('openTeamPlayersTab')
+        ->set('teamPlayerInputs.'.$team->id, 'Ali')
+        ->call('addTeamPlayer', $team->id)
+        ->assertHasNoErrors()
+        ->assertSee('Ali');
+
+    $team->refresh();
+    $player = $team->teamPlayers()->firstOrFail();
+    expect($player->player_name)->toBe('Ali');
 });
 
 test('singles bye auto-completes match and sets winner side', function (): void {

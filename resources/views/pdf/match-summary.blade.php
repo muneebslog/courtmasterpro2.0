@@ -5,7 +5,7 @@
     <title>Match #{{ $match->id }} - {{ $match->side_a_label }} vs {{ $match->side_b_label }}@if($match->match_order) ({{ $match->match_order }})@endif</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: DejaVu Sans, sans-serif; font-size: 11pt; color: #1a1a1a; padding: 20mm; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 11pt; color: #1a1a1a; padding: 20mm; padding-bottom: 70mm; }
         h1 { font-size: 16pt; font-weight: bold; margin-bottom: 4pt; border-bottom: 1pt solid #333; padding-bottom: 6pt; }
         h2 { font-size: 12pt; font-weight: bold; margin-top: 12pt; margin-bottom: 6pt; }
         .meta { font-size: 10pt; color: #444; margin-bottom: 12pt; }
@@ -17,7 +17,11 @@
         .vs { font-weight: bold; color: #666; }
         .winner { background: #e8f5e9; padding: 6pt 10pt; border-radius: 2pt; font-weight: bold; margin-top: 8pt; }
         .officials { display: flex; flex-wrap: wrap; gap: 24pt; margin-top: 12pt; font-size: 10pt; }
-        .footer { margin-top: 20pt; padding-top: 8pt; border-top: 1pt solid #ddd; font-size: 9pt; color: #666; text-align: center; }
+        .signatures-footer { position: fixed; left: 20mm; right: 20mm; bottom: 18mm; border-top: 1pt solid #ddd; padding-top: 10pt; }
+        .signatures-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .signatures-table td { width: 50%; vertical-align: top; padding: 0 8pt 6pt 0; font-size: 10pt; }
+        .signature-line { border-top: 1pt solid #222; margin-top: 20pt; padding-top: 4pt; font-size: 9pt; color: #444; }
+        .footer-meta { margin-top: 6pt; font-size: 9pt; color: #666; text-align: right; }
     </style>
 </head>
 <body>
@@ -134,8 +138,24 @@
         @endif
     </div>
 
-    <div class="footer">
-        Generated {{ now()->format('M j, Y H:i') }} · CourtMaster
+    <div class="signatures-footer">
+        <table class="signatures-table">
+            <tr>
+                <td><strong>As Umpire:</strong> {{ $match->umpire_name ?: '________________' }}</td>
+                <td><strong>Service Judge:</strong> {{ $match->service_judge_name ?: '________________' }}</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="signature-line">Umpire Signature</div>
+                </td>
+                <td>
+                    <div class="signature-line">Service Judge Signature</div>
+                </td>
+            </tr>
+        </table>
+        <div class="footer-meta">
+            Date printed at: {{ now()->format('M j, Y H:i') }}
+        </div>
     </div>
 </body>
 </html>

@@ -75,11 +75,11 @@ test('admin can view tie page with inner matches in order', function (): void {
         'tie' => $tie->id,
     ])
         ->assertOk()
-        ->assertSee('S1')
-        ->assertSee('D1')
-        ->assertSee('S2')
-        ->assertSee('D2')
-        ->assertSee('S3')
+        ->assertSee('Match 1')
+        ->assertSee('Match 2')
+        ->assertSee('Match 3')
+        ->assertSee('Match 4')
+        ->assertSee('Match 5')
         ->assertSee('Falcons')
         ->assertSee('Eagles');
 });

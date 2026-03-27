@@ -99,7 +99,7 @@
     </div>
 
     <footer class="py-10 text-center text-xs text-[#b5b5b0]">
-        &copy; {{ date('Y') }} Badminton Tournament Manager. Built with Laravel.
+        &copy; {{ date('Y') }} Badminton Tournament Manager. Built By <a href="muneebbuilds.com">Muhammad Muneeb</a>.
         {{-- Hall screens: assign Court as 1–5 in the match control panel so it matches these links. --}}
         <div class="mt-6 flex flex-wrap items-center justify-center gap-2">
             @foreach (range(1, 5) as $screen)

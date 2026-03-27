@@ -15,8 +15,7 @@ class TieResultService
     private const MATCH_ORDER = ['S1', 'D1', 'S2', 'D2', 'S3'];
 
     /**
-     * Recompute tie winner based on inner match results and mark the remaining
-     * unplayed matches as `not_required`.
+     * Recompute tie winner and status based on all inner match results.
      *
      * This is intentionally idempotent so it can be called after any inner match
      * transitions to a terminal state.
@@ -36,20 +35,21 @@ class TieResultService
             return;
         }
 
-        $orderIndexByOrder = array_flip(self::MATCH_ORDER);
-
         $winsA = 0;
         $winsB = 0;
-        $tieDecidedAtOrderIndex = null;
-        $winnerTeamSide = null; // 'a' | 'b'
+        $allFinished = true;
 
         foreach (self::MATCH_ORDER as $order) {
             $innerMatch = $tie->matches->firstWhere('match_order', $order);
             if (! $innerMatch) {
+                $allFinished = false;
+
                 continue;
             }
 
-            if (! in_array($innerMatch->status, ['completed', 'walkover'], true)) {
+            if (! in_array($innerMatch->status, ['completed', 'walkover', 'retired', 'not_required'], true)) {
+                $allFinished = false;
+
                 continue;
             }
 
@@ -62,41 +62,18 @@ class TieResultService
             } else {
                 $winsB++;
             }
-
-            if ($winsA >= 3 || $winsB >= 3) {
-                $winnerTeamSide = $winsA >= 3 ? 'a' : 'b';
-                $tieDecidedAtOrderIndex = $orderIndexByOrder[$order] ?? null;
-                break;
-            }
         }
 
-        if (! $winnerTeamSide || $tieDecidedAtOrderIndex === null) {
-            return; // tie not decided yet
+        $winnerTeamId = null;
+        if ($winsA > $winsB) {
+            $winnerTeamId = $tie->team_a_id;
+        } elseif ($winsB > $winsA) {
+            $winnerTeamId = $tie->team_b_id;
         }
-
-        $winnerTeamId = $winnerTeamSide === 'a' ? $tie->team_a_id : $tie->team_b_id;
 
         $tie->update([
             'winner_team_id' => $winnerTeamId,
-            'status' => 'completed',
+            'status' => $allFinished && $winnerTeamId !== null ? 'completed' : 'in_progress',
         ]);
-
-        // Mark remaining, still-pending matches as NOT REQUIRED.
-        foreach ($tie->matches as $innerMatch) {
-            if ($innerMatch->status !== 'pending') {
-                continue;
-            }
-
-            $innerIndex = $orderIndexByOrder[$innerMatch->match_order] ?? null;
-            if ($innerIndex === null) {
-                continue;
-            }
-
-            if ($innerIndex > $tieDecidedAtOrderIndex) {
-                $innerMatch->update([
-                    'status' => 'not_required',
-                ]);
-            }
-        }
     }
 }

@@ -16,6 +16,10 @@
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="book-open-text" :href="route('guide')" :current="request()->routeIs('guide')" wire:navigate>
+                        {{ __('Guide') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
 
              
@@ -94,5 +98,28 @@
         {{ $slot }}
 
         @fluxScripts
+
+        <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
+        <script>
+            const renderTwemoji = () => {
+                if (window.twemoji) {
+                    window.twemoji.parse(document.body, {
+                        folder: 'svg',
+                        ext: '.svg',
+                    });
+                }
+            };
+
+            document.addEventListener('DOMContentLoaded', renderTwemoji);
+            document.addEventListener('livewire:navigated', renderTwemoji);
+        </script>
+        <style>
+            img.emoji {
+                width: 1em;
+                height: 1em;
+                margin: 0 0.08em;
+                vertical-align: -0.1em;
+            }
+        </style>
     </body>
 </html>

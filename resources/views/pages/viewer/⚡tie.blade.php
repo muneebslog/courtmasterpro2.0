@@ -89,9 +89,9 @@ new #[Layout('components.layouts.viewer', ['title' => 'Tie'])] class extends Com
             {{ __('Stage') }}
         </flux:button>
         <flux:heading size="xl" class="text-white" style="font-family: 'Syne', sans-serif;">
-            {{ $tie->teamA?->name ?? __('Team A') }}
+            {{ $tie->teamA?->flag ? $tie->teamA->flag.' ' : '' }}{{ $tie->teamA?->name ?? __('Team A') }}
             <span class="text-white/35">vs</span>
-            {{ $tie->teamB?->name ?? __('Team B') }}
+            {{ $tie->teamB?->flag ? $tie->teamB->flag.' ' : '' }}{{ $tie->teamB?->name ?? __('Team B') }}
         </flux:heading>
         <flux:text class="mt-1 text-emerald-100/60">
             {{ $stage->name }} · {{ $event->event_name }}

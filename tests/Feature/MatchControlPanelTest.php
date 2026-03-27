@@ -399,7 +399,7 @@ test('match winner detected when required games won', function (): void {
     expect($matchEnded)->not()->toBeNull();
 });
 
-test('team tie pre-start modal defaults first eligible players so start match works without extra selects', function (): void {
+test('team tie pre-start modal allows starting without player selection', function (): void {
     /** @var TestCase $this */
     $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
 
@@ -429,9 +429,9 @@ test('team tie pre-start modal defaults first eligible players so start match wo
     $teamA = Team::create(['event_id' => $event->id, 'name' => 'Falcons']);
     $teamB = Team::create(['event_id' => $event->id, 'name' => 'Eagles']);
 
-    $pA1 = TeamPlayer::create(['team_id' => $teamA->id, 'player_name' => 'Alice']);
+    TeamPlayer::create(['team_id' => $teamA->id, 'player_name' => 'Alice']);
     TeamPlayer::create(['team_id' => $teamA->id, 'player_name' => 'Bob']);
-    $pB1 = TeamPlayer::create(['team_id' => $teamB->id, 'player_name' => 'X']);
+    TeamPlayer::create(['team_id' => $teamB->id, 'player_name' => 'X']);
     TeamPlayer::create(['team_id' => $teamB->id, 'player_name' => 'Y']);
 
     $tie = Tie::create([
@@ -485,18 +485,14 @@ test('team tie pre-start modal defaults first eligible players so start match wo
         'match' => $match->id,
     ]);
 
-    $ids = $component->get('selectedPlayerIds');
-    expect($ids['side_a_1'])->toBe($pA1->id);
-    expect($ids['side_b_1'])->toBe($pB1->id);
-
     $component->call('startMatch')->assertHasNoErrors();
 
     $match->refresh();
     expect($match->status)->toBe('in_progress');
-    expect($match->matchPlayers()->count())->toBe(2);
+    expect($match->matchPlayers()->count())->toBe(0);
 });
 
-test('team tie winner is set after 3 inner matches and remaining matches become not required', function (): void {
+test('team tie remains playable after one side reaches 3 inner wins', function (): void {
     /** @var TestCase $this */
     $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
 
@@ -606,13 +602,13 @@ test('team tie winner is set after 3 inner matches and remaining matches become 
     }
 
     $tie->refresh();
-    expect($tie->status)->toBe('completed');
+    expect($tie->status)->toBe('in_progress');
     expect($tie->winner_team_id)->toBe($teamA->id);
 
     $innerMatches['D2']->refresh();
     $innerMatches['S3']->refresh();
-    expect($innerMatches['D2']->status)->toBe('not_required');
-    expect($innerMatches['S3']->status)->toBe('not_required');
+    expect($innerMatches['D2']->status)->toBe('pending');
+    expect($innerMatches['S3']->status)->toBe('pending');
 });
 
 test('completed match control panel shows per-game scores not placeholder zeros', function (): void {

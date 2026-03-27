@@ -124,7 +124,17 @@ new #[Layout('components.layouts.viewer', ['title' => 'Match'])] class extends C
                     @endif
                     <flux:heading size="lg" class="text-white" style="font-family: 'Syne', sans-serif;">
                         @if ($match->tie_id && $match->match_order)
-                            {{ __('Match') }} {{ $match->match_order }}
+                            @php
+                                $tieOrderNumber = match ((string) $match->match_order) {
+                                    'S1' => 1,
+                                    'D1' => 2,
+                                    'S2' => 3,
+                                    'D2' => 4,
+                                    'S3' => 5,
+                                    default => null,
+                                };
+                            @endphp
+                            {{ __('Match') }} {{ $tieOrderNumber ?? $match->match_order }}
                         @elseif ($matchTopLevelSequence !== null)
                             {{ __('Match') }} {{ $matchTopLevelSequence }}
                         @else

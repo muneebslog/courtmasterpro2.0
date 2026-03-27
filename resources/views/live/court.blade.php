@@ -22,6 +22,7 @@
         content="Live badminton match scores for Court {{ $court }} on CourtMaster.">
     <meta name="twitter:image" content="{{ asset('imgs/hero.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
     <style>
         * {
             margin: 0;
@@ -450,6 +451,13 @@
             gap: 2vw;
         }
 
+        .team-name img.emoji {
+            width: 0.95em;
+            height: 0.95em;
+            margin: 0 0.08em 0 0;
+            vertical-align: -0.08em;
+        }
+
         .player-names {
             color: #aaa;
             font-size: 2.5vh;
@@ -840,6 +848,13 @@
                         team1ScoresEl.appendChild(createScoreCell('current-score', slot.score_a));
                         team2ScoresEl.appendChild(createScoreCell('current-score', slot.score_b));
                     }
+                }
+
+                if (window.twemoji) {
+                    window.twemoji.parse(boardEl, {
+                        folder: 'svg',
+                        ext: '.svg'
+                    });
                 }
             }
 

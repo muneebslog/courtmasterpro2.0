@@ -5,6 +5,8 @@ use App\Http\Controllers\LiveScoreController;
 use App\Http\Controllers\MatchPdfController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\TournamentController;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -31,6 +33,18 @@ Route::livewire('viewer/tournaments/{tournament}/events/{event}/stages/{stage}/m
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('dashboard/tournaments', [DashboardController::class, 'store'])->name('dashboard.tournaments.store');
+
+    Route::get('guide', function () {
+        $user = Auth::user();
+
+        abort_unless(
+            $user instanceof User
+                && in_array($user->role, [User::ROLE_ADMIN, User::ROLE_UMPIRES], true),
+            403
+        );
+
+        return view('pages.guide');
+    })->name('guide');
 
     Route::get('tournaments/{tournament}', [TournamentController::class, 'show'])->name('tournaments.show');
 

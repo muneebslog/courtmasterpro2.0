@@ -6,11 +6,9 @@ use App\Models\MatchEvent;
 use App\Models\MatchModel;
 use App\Models\MatchPlayer;
 use App\Models\Stage;
-use App\Models\TeamPlayer;
 use App\Models\Tournament;
 use App\Models\User;
 use App\Services\TieResultService;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -30,14 +28,6 @@ new class extends Component {
     public string $serviceJudgeName = '';
 
     public string $court = '';
-
-    /** @var array<string, int|null> Player ID per slot: side_a_1, side_a_2, side_b_1, side_b_2 */
-    public array $selectedPlayerIds = [
-        'side_a_1' => null,
-        'side_a_2' => null,
-        'side_b_1' => null,
-        'side_b_2' => null,
-    ];
 
     public string $occurrenceType = 'card';
 
@@ -75,7 +65,6 @@ new class extends Component {
 
         if ($matchModel->status === 'pending') {
             $this->showPreStartModal = true;
-            $this->populateDefaultTeamPlayerSelections();
         }
     }
 
@@ -144,85 +133,6 @@ new class extends Component {
     public function openPreStartModal(): void
     {
         $this->showPreStartModal = true;
-        $this->populateDefaultTeamPlayerSelections();
-    }
-
-    /**
-     * Sync Livewire state with the first eligible roster option per slot (native <select> shows
-     * the first option while wire:model stays null until the user changes it).
-     */
-    private function populateDefaultTeamPlayerSelections(): void
-    {
-        $match = $this->match();
-        $event = $this->event();
-
-        if ($event->event_type !== Event::EVENT_TYPE_TEAM || ! $match->tie_id || $match->status !== 'pending') {
-            return;
-        }
-
-        $tie = $match->tie()->with(['teamA.teamPlayers', 'teamB.teamPlayers', 'matches.matchPlayers'])->first();
-        if (! $tie) {
-            return;
-        }
-
-        $isDoubles = in_array((string) $match->match_order, ['D1', 'D2'], true);
-
-        $playedSinglesBySide = ['a' => [], 'b' => []];
-        $playedDoublesBySide = ['a' => [], 'b' => []];
-        foreach ($tie->matches as $innerMatch) {
-            $innerOrder = (string) $innerMatch->match_order;
-            if ($innerOrder === '') {
-                continue;
-            }
-            $innerIsDoubles = in_array($innerOrder, ['D1', 'D2'], true);
-            foreach ($innerMatch->matchPlayers as $innerMp) {
-                if ($innerIsDoubles) {
-                    $playedDoublesBySide[$innerMp->side][$innerMp->player_name] = true;
-                } else {
-                    $playedSinglesBySide[$innerMp->side][$innerMp->player_name] = true;
-                }
-            }
-        }
-
-        /** @var Collection<int, \App\Models\TeamPlayer> $playersA */
-        $playersA = ($tie->teamA?->teamPlayers ?? collect())->sortBy('id')->values();
-        /** @var Collection<int, \App\Models\TeamPlayer> $playersB */
-        $playersB = ($tie->teamB?->teamPlayers ?? collect())->sortBy('id')->values();
-
-        $eligible = function (Collection $players, string $side) use ($isDoubles, $playedSinglesBySide, $playedDoublesBySide): Collection {
-            return $players->filter(function ($tp) use ($side, $isDoubles, $playedSinglesBySide, $playedDoublesBySide) {
-                if ($isDoubles) {
-                    return ! isset($playedDoublesBySide[$side][$tp->player_name]);
-                }
-
-                return ! isset($playedSinglesBySide[$side][$tp->player_name]);
-            })->values();
-        };
-
-        $eligibleA = $eligible($playersA, 'a');
-        $eligibleB = $eligible($playersB, 'b');
-
-        $firstA = $eligibleA->first();
-        $firstB = $eligibleB->first();
-
-        if ($isDoubles) {
-            $secondA = $eligibleA->first(fn ($tp) => $firstA && (int) $tp->id !== (int) $firstA->id);
-            $secondB = $eligibleB->first(fn ($tp) => $firstB && (int) $tp->id !== (int) $firstB->id);
-
-            $this->selectedPlayerIds = [
-                'side_a_1' => $firstA?->id,
-                'side_a_2' => $secondA?->id,
-                'side_b_1' => $firstB?->id,
-                'side_b_2' => $secondB?->id,
-            ];
-        } else {
-            $this->selectedPlayerIds = [
-                'side_a_1' => $firstA?->id,
-                'side_a_2' => null,
-                'side_b_1' => $firstB?->id,
-                'side_b_2' => null,
-            ];
-        }
     }
 
     public function closePreStartModal(): mixed
@@ -284,18 +194,11 @@ new class extends Component {
 
         $event = $this->event();
         $isTeamEvent = $event->event_type === Event::EVENT_TYPE_TEAM;
-        $isDoubles = $event->event_type === Event::EVENT_TYPE_DOUBLES || ($isTeamEvent && in_array($match->match_order, ['D1', 'D2'], true));
 
         // Team ties are played strictly sequentially inside the tie order:
         // S1 -> D1 -> S2 -> D2 -> S3.
         if ($isTeamEvent && $match->tie_id) {
             $tieOrderIndex = ['S1' => 0, 'D1' => 1, 'S2' => 2, 'D2' => 3, 'S3' => 4];
-
-            $tieStatus = $match->tie()->value('status');
-            if ($tieStatus === 'completed') {
-                $this->addError('startMatch', __('This tie is already completed.'));
-                return;
-            }
 
             $tieMatches = MatchModel::query()
                 ->where('tie_id', $match->tie_id)
@@ -314,86 +217,13 @@ new class extends Component {
             }
         }
 
-        if ($isTeamEvent && $match->tie_id) {
-            $this->validate([
-                'umpireName' => ['nullable', 'string', 'max:255'],
-                'serviceJudgeName' => ['nullable', 'string', 'max:255'],
-                'court' => ['nullable', 'string', 'max:255'],
-                'selectedPlayerIds.side_a_1' => ['required', 'integer', 'exists:team_players,id'],
-                'selectedPlayerIds.side_a_2' => $isDoubles ? ['required', 'integer', 'exists:team_players,id'] : ['nullable'],
-                'selectedPlayerIds.side_b_1' => ['required', 'integer', 'exists:team_players,id'],
-                'selectedPlayerIds.side_b_2' => $isDoubles ? ['required', 'integer', 'exists:team_players,id'] : ['nullable'],
-            ]);
+        $this->validate([
+            'umpireName' => ['nullable', 'string', 'max:255'],
+            'serviceJudgeName' => ['nullable', 'string', 'max:255'],
+            'court' => ['nullable', 'string', 'max:255'],
+        ]);
 
-            // Eligibility rule per tie (info.md):
-            // - A player may play max 1 singles match and max 1 doubles match per tie.
-            $selectedIds = array_filter(array_values($this->selectedPlayerIds));
-            $playersById = TeamPlayer::query()
-                ->whereIn('id', $selectedIds)
-                ->get()
-                ->keyBy('id');
-
-            $playedSinglesBySide = ['a' => [], 'b' => []]; // [side][player_name] = true
-            $playedDoublesBySide = ['a' => [], 'b' => []]; // [side][player_name] = true
-
-            $tieMatches = MatchModel::query()
-                ->where('tie_id', $match->tie_id)
-                ->with('matchPlayers')
-                ->get();
-
-            foreach ($tieMatches as $innerMatch) {
-                $innerMatchOrder = (string) $innerMatch->match_order;
-                if ($innerMatchOrder === '') {
-                    continue;
-                }
-
-                $innerIsDoubles = in_array($innerMatchOrder, ['D1', 'D2'], true);
-
-                foreach ($innerMatch->matchPlayers as $innerMp) {
-                    if ($innerIsDoubles) {
-                        $playedDoublesBySide[$innerMp->side][$innerMp->player_name] = true;
-                    } else {
-                        $playedSinglesBySide[$innerMp->side][$innerMp->player_name] = true;
-                    }
-                }
-            }
-
-            $positions = [
-                ['side' => 'a', 'key' => 'side_a_1'],
-                ['side' => 'a', 'key' => 'side_a_2'],
-                ['side' => 'b', 'key' => 'side_b_1'],
-                ['side' => 'b', 'key' => 'side_b_2'],
-            ];
-
-            foreach ($positions as $p) {
-                $id = $this->selectedPlayerIds[$p['key']] ?? null;
-                if (! $id || ! isset($playersById[$id])) {
-                    continue;
-                }
-
-                $playerName = $playersById[$id]->player_name;
-
-                if ($isDoubles) {
-                    if (isset($playedDoublesBySide[$p['side']][$playerName])) {
-                        $this->addError('startMatch', __('A player can only play one doubles match per tie.'));
-                        return;
-                    }
-                } else {
-                    if (isset($playedSinglesBySide[$p['side']][$playerName])) {
-                        $this->addError('startMatch', __('A player can only play one singles match per tie.'));
-                        return;
-                    }
-                }
-            }
-        } else {
-            $this->validate([
-                'umpireName' => ['nullable', 'string', 'max:255'],
-                'serviceJudgeName' => ['nullable', 'string', 'max:255'],
-                'court' => ['nullable', 'string', 'max:255'],
-            ]);
-        }
-
-        DB::transaction(function () use ($match, $event, $isTeamEvent, $isDoubles): void {
+        DB::transaction(function () use ($match): void {
             $match->update([
                 'status' => 'in_progress',
                 'umpire_name' => $this->umpireName ?: null,
@@ -401,31 +231,6 @@ new class extends Component {
                 'court' => $this->court ?: null,
                 'started_at' => now(),
             ]);
-
-            if ($isTeamEvent && $match->tie_id && $match->matchPlayers()->count() === 0) {
-                $tie = $match->tie()->with(['teamA', 'teamB'])->first();
-                $players = TeamPlayer::query()
-                    ->whereIn('id', array_filter(array_values($this->selectedPlayerIds)))
-                    ->get()
-                    ->keyBy('id');
-
-                $positions = [
-                    ['side' => 'a', 'position' => 1, 'key' => 'side_a_1'],
-                    ['side' => 'a', 'position' => 2, 'key' => 'side_a_2'],
-                    ['side' => 'b', 'position' => 1, 'key' => 'side_b_1'],
-                    ['side' => 'b', 'position' => 2, 'key' => 'side_b_2'],
-                ];
-                foreach ($positions as $p) {
-                    $id = $this->selectedPlayerIds[$p['key']] ?? null;
-                    if ($id && isset($players[$id])) {
-                        $match->matchPlayers()->create([
-                            'side' => $p['side'],
-                            'player_name' => $players[$id]->player_name,
-                            'position' => $p['position'],
-                        ]);
-                    }
-                }
-            }
 
             $game = $match->games()->firstOrCreate(
                 ['game_number' => 1],
@@ -782,33 +587,6 @@ new class extends Component {
     $badgeColor = $badgeColors[$match->status] ?? 'neutral';
 
     $isTeamEvent = $event->event_type === Event::EVENT_TYPE_TEAM;
-    $isDoubles = $event->event_type === Event::EVENT_TYPE_DOUBLES || ($isTeamEvent && $match->match_order && in_array($match->match_order, ['D1', 'D2'], true));
-    $tie = $match->tie_id ? $match->tie()->with(['teamA.teamPlayers', 'teamB.teamPlayers', 'matches.matchPlayers'])->first() : null;
-    $teamPlayersA = $tie?->teamA?->teamPlayers ?? collect();
-    $teamPlayersB = $tie?->teamB?->teamPlayers ?? collect();
-
-    // Player eligibility per tie (info.md):
-    // - each player can play at most one singles and at most one doubles match per tie.
-    $playedSinglesBySide = ['a' => [], 'b' => []];
-    $playedDoublesBySide = ['a' => [], 'b' => []];
-    if ($tie) {
-        foreach ($tie->matches as $innerMatch) {
-            $innerOrder = (string) $innerMatch->match_order;
-            if ($innerOrder === '') {
-                continue;
-            }
-
-            $innerIsDoubles = in_array($innerOrder, ['D1', 'D2'], true);
-            foreach ($innerMatch->matchPlayers as $innerMp) {
-                if ($innerIsDoubles) {
-                    $playedDoublesBySide[$innerMp->side][$innerMp->player_name] = true;
-                } else {
-                    $playedSinglesBySide[$innerMp->side][$innerMp->player_name] = true;
-                }
-            }
-        }
-    }
-
     $canScore = ! in_array($match->status, ['completed', 'walkover', 'retired', 'not_required'], true);
     $playersForOccurrence = $match->matchPlayers->where('side', $this->occurrenceSide)->values();
 @endphp
@@ -831,7 +609,17 @@ new class extends Component {
                 <div class="flex w-full flex-col items-center gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                     <span class="text-center text-xs font-semibold uppercase tracking-[0.2em] text-sky-400/90 sm:text-left">
                         @if ($match->tie_id && $match->match_order)
-                            {{ __('MATCH') }} {{ $match->match_order }} · {{ $stage->name }}
+                            @php
+                                $tieOrderNumber = match ((string) $match->match_order) {
+                                    'S1' => 1,
+                                    'D1' => 2,
+                                    'S2' => 3,
+                                    'D2' => 4,
+                                    'S3' => 5,
+                                    default => null,
+                                };
+                            @endphp
+                            {{ __('MATCH') }} {{ $tieOrderNumber ?? $match->match_order }} · {{ $stage->name }}
                         @elseif ($matchTopLevelSequence !== null)
                             {{ __('MATCH') }} {{ $matchTopLevelSequence }} · {{ $stage->name }}
                         @else
@@ -1130,57 +918,6 @@ new class extends Component {
                 <flux:input wire:model="court" type="text" />
             </flux:field>
 
-            @if ($isTeamEvent && $tie)
-                <div class="border-t border-neutral-200 pt-4 dark:border-neutral-600">
-                    <flux:heading size="sm" class="mb-3">{{ __('Select Players') }}</flux:heading>
-                    <div class="space-y-4">
-                        <div>
-                            <flux:label class="mb-1 block text-sm">{{ $match->side_a_label }} — {{ $isDoubles ? __('Player 1') : __('Player') }}</flux:label>
-                            <flux:select wire:model.live="selectedPlayerIds.side_a_1" placeholder="{{ __('Select') }}">
-                                @foreach ($teamPlayersA as $tp)
-                                    <option value="{{ $tp->id }}" @if(($isDoubles && isset($playedDoublesBySide['a'][$tp->player_name])) || (! $isDoubles && isset($playedSinglesBySide['a'][$tp->player_name]))) disabled @endif>
-                                        {{ $tp->player_name }}
-                                    </option>
-                                @endforeach
-                            </flux:select>
-                        </div>
-                        @if ($isDoubles)
-                            <div>
-                                <flux:label class="mb-1 block text-sm">{{ $match->side_a_label }} — {{ __('Player 2') }}</flux:label>
-                                <flux:select wire:model.live="selectedPlayerIds.side_a_2" placeholder="{{ __('Select') }}">
-                                    @foreach ($teamPlayersA as $tp)
-                                        <option value="{{ $tp->id }}" @if(($isDoubles && isset($playedDoublesBySide['a'][$tp->player_name])) || (! $isDoubles && isset($playedSinglesBySide['a'][$tp->player_name]))) disabled @endif>
-                                            {{ $tp->player_name }}
-                                        </option>
-                                    @endforeach
-                                </flux:select>
-                            </div>
-                        @endif
-                        <div>
-                            <flux:label class="mb-1 block text-sm">{{ $match->side_b_label }} — {{ $isDoubles ? __('Player 1') : __('Player') }}</flux:label>
-                            <flux:select wire:model.live="selectedPlayerIds.side_b_1" placeholder="{{ __('Select') }}">
-                                @foreach ($teamPlayersB as $tp)
-                                    <option value="{{ $tp->id }}" @if(($isDoubles && isset($playedDoublesBySide['b'][$tp->player_name])) || (! $isDoubles && isset($playedSinglesBySide['b'][$tp->player_name]))) disabled @endif>
-                                        {{ $tp->player_name }}
-                                    </option>
-                                @endforeach
-                            </flux:select>
-                        </div>
-                        @if ($isDoubles)
-                            <div>
-                                <flux:label class="mb-1 block text-sm">{{ $match->side_b_label }} — {{ __('Player 2') }}</flux:label>
-                                <flux:select wire:model.live="selectedPlayerIds.side_b_2" placeholder="{{ __('Select') }}">
-                                    @foreach ($teamPlayersB as $tp)
-                                        <option value="{{ $tp->id }}" @if(($isDoubles && isset($playedDoublesBySide['b'][$tp->player_name])) || (! $isDoubles && isset($playedSinglesBySide['b'][$tp->player_name]))) disabled @endif>
-                                            {{ $tp->player_name }}
-                                        </option>
-                                    @endforeach
-                                </flux:select>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            @endif
         </div>
 
         <div class="flex justify-end gap-3">

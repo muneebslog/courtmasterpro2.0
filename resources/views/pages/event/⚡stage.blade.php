@@ -51,6 +51,8 @@ new class extends Component {
     /** @var array<string, string> */
     public array $teamPlayerInputs = [];
 
+    private const COUNTRY_FLAG_EMOJI_REGEX = '/^[\x{1F1E6}-\x{1F1FF}]{2}$/u';
+
     public function mount(int $tournament, int $event, int $stage): void
     {
         $this->tournamentId = $tournament;
@@ -145,6 +147,61 @@ new class extends Component {
         return mb_strtolower(trim($value)) === 'bye';
     }
 
+    private function normalizeFlag(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = trim($value);
+
+        return $normalized === '' ? null : $normalized;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function countryOptions(): array
+    {
+        return [
+            '🇵🇰' => 'Pakistan',
+            '🇮🇳' => 'India',
+            '🇧🇩' => 'Bangladesh',
+            '🇱🇰' => 'Sri Lanka',
+            '🇳🇵' => 'Nepal',
+            '🇦🇪' => 'UAE',
+            '🇸🇦' => 'Saudi Arabia',
+            '🇬🇧' => 'United Kingdom',
+            '🇺🇸' => 'United States',
+            '🇩🇪' => 'Germany',
+            '🇨🇳' => 'China',
+            '🇯🇵' => 'Japan',
+            '🇰🇷' => 'South Korea',
+            '🇮🇩' => 'Indonesia',
+            '🇲🇾' => 'Malaysia',
+            '🇹🇭' => 'Thailand',
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function allowedCountryFlags(): array
+    {
+        return array_keys($this->countryOptions());
+    }
+
+    private function formatNameWithFlag(string $name, ?string $flag): string
+    {
+        $normalizedFlag = $this->normalizeFlag($flag);
+
+        if ($normalizedFlag === null) {
+            return $name;
+        }
+
+        return $normalizedFlag.' '.$name;
+    }
+
     public function openCreationFlow(): void
     {
         $tournament = $this->tournament();
@@ -187,7 +244,9 @@ new class extends Component {
             $rows[] = [
                 'match_label' => 'Match '.$index,
                 'player_a' => '',
+                'player_a_flag' => '',
                 'player_b' => '',
+                'player_b_flag' => '',
             ];
         }
 
@@ -201,9 +260,13 @@ new class extends Component {
             $rows[] = [
                 'match_label' => 'Match '.$index,
                 'player_a_1' => '',
+                'player_a_1_flag' => '',
                 'player_a_2' => '',
+                'player_a_2_flag' => '',
                 'player_b_1' => '',
+                'player_b_1_flag' => '',
                 'player_b_2' => '',
+                'player_b_2_flag' => '',
             ];
         }
 
@@ -217,7 +280,9 @@ new class extends Component {
             $rows[] = [
                 'tie_label' => 'Tie '.$index,
                 'team_a_name' => '',
+                'team_a_flag' => '',
                 'team_b_name' => '',
+                'team_b_flag' => '',
             ];
         }
 
@@ -233,7 +298,9 @@ new class extends Component {
         $rules = [
             'singleMatches' => ['required', 'array', 'size:'.$this->stageRowsCount()],
             'singleMatches.*.player_a' => ['required', 'string', 'max:255'],
+            'singleMatches.*.player_a_flag' => ['nullable', 'string', 'max:16', Rule::in($this->allowedCountryFlags()), 'regex:'.self::COUNTRY_FLAG_EMOJI_REGEX],
             'singleMatches.*.player_b' => ['required', 'string', 'max:255'],
+            'singleMatches.*.player_b_flag' => ['nullable', 'string', 'max:16', Rule::in($this->allowedCountryFlags()), 'regex:'.self::COUNTRY_FLAG_EMOJI_REGEX],
         ];
 
         $validated = $this->validate($rules);
@@ -241,6 +308,9 @@ new class extends Component {
 
         DB::transaction(function () use ($validated, $stage): void {
             foreach ($validated['singleMatches'] as $matchData) {
+                $sideALabel = $this->formatNameWithFlag($matchData['player_a'], $matchData['player_a_flag'] ?? null);
+                $sideBLabel = $this->formatNameWithFlag($matchData['player_b'], $matchData['player_b_flag'] ?? null);
+
                 $isSideABye = $this->isBye($matchData['player_a']);
                 $isSideBBye = $this->isBye($matchData['player_b']);
 
@@ -255,8 +325,8 @@ new class extends Component {
                 $match = MatchModel::query()->create([
                     'stage_id' => $stage->id,
                     'tie_id' => null,
-                    'side_a_label' => $matchData['player_a'],
-                    'side_b_label' => $matchData['player_b'],
+                    'side_a_label' => $sideALabel,
+                    'side_b_label' => $sideBLabel,
                     'match_order' => null,
                     'best_of' => $stage->best_of,
                     'status' => $status,
@@ -271,12 +341,14 @@ new class extends Component {
                 $match->matchPlayers()->createMany([
                     [
                         'side' => 'a',
-                        'player_name' => $matchData['player_a'],
+                        'player_name' => $sideALabel,
+                        'flag' => $this->normalizeFlag($matchData['player_a_flag'] ?? null),
                         'position' => 1,
                     ],
                     [
                         'side' => 'b',
-                        'player_name' => $matchData['player_b'],
+                        'player_name' => $sideBLabel,
+                        'flag' => $this->normalizeFlag($matchData['player_b_flag'] ?? null),
                         'position' => 1,
                     ],
                 ]);
@@ -295,9 +367,13 @@ new class extends Component {
         $rules = [
             'doubleMatches' => ['required', 'array', 'size:'.$this->stageRowsCount()],
             'doubleMatches.*.player_a_1' => ['required', 'string', 'max:255'],
+            'doubleMatches.*.player_a_1_flag' => ['nullable', 'string', 'max:16', Rule::in($this->allowedCountryFlags()), 'regex:'.self::COUNTRY_FLAG_EMOJI_REGEX],
             'doubleMatches.*.player_a_2' => ['required', 'string', 'max:255'],
+            'doubleMatches.*.player_a_2_flag' => ['nullable', 'string', 'max:16', Rule::in($this->allowedCountryFlags()), 'regex:'.self::COUNTRY_FLAG_EMOJI_REGEX],
             'doubleMatches.*.player_b_1' => ['required', 'string', 'max:255'],
+            'doubleMatches.*.player_b_1_flag' => ['nullable', 'string', 'max:16', Rule::in($this->allowedCountryFlags()), 'regex:'.self::COUNTRY_FLAG_EMOJI_REGEX],
             'doubleMatches.*.player_b_2' => ['required', 'string', 'max:255'],
+            'doubleMatches.*.player_b_2_flag' => ['nullable', 'string', 'max:16', Rule::in($this->allowedCountryFlags()), 'regex:'.self::COUNTRY_FLAG_EMOJI_REGEX],
         ];
 
         $validated = $this->validate($rules);
@@ -305,8 +381,12 @@ new class extends Component {
 
         DB::transaction(function () use ($validated, $stage): void {
             foreach ($validated['doubleMatches'] as $matchData) {
-                $sideALabel = $matchData['player_a_1'].' / '.$matchData['player_a_2'];
-                $sideBLabel = $matchData['player_b_1'].' / '.$matchData['player_b_2'];
+                $sideAPlayerOne = $this->formatNameWithFlag($matchData['player_a_1'], $matchData['player_a_1_flag'] ?? null);
+                $sideAPlayerTwo = $this->formatNameWithFlag($matchData['player_a_2'], $matchData['player_a_2_flag'] ?? null);
+                $sideBPlayerOne = $this->formatNameWithFlag($matchData['player_b_1'], $matchData['player_b_1_flag'] ?? null);
+                $sideBPlayerTwo = $this->formatNameWithFlag($matchData['player_b_2'], $matchData['player_b_2_flag'] ?? null);
+                $sideALabel = $sideAPlayerOne.' / '.$sideAPlayerTwo;
+                $sideBLabel = $sideBPlayerOne.' / '.$sideBPlayerTwo;
 
                 $isSideABye = $this->isBye($matchData['player_a_1']) || $this->isBye($matchData['player_a_2']);
                 $isSideBBye = $this->isBye($matchData['player_b_1']) || $this->isBye($matchData['player_b_2']);
@@ -338,22 +418,26 @@ new class extends Component {
                 $match->matchPlayers()->createMany([
                     [
                         'side' => 'a',
-                        'player_name' => $matchData['player_a_1'],
+                        'player_name' => $sideAPlayerOne,
+                        'flag' => $this->normalizeFlag($matchData['player_a_1_flag'] ?? null),
                         'position' => 1,
                     ],
                     [
                         'side' => 'a',
-                        'player_name' => $matchData['player_a_2'],
+                        'player_name' => $sideAPlayerTwo,
+                        'flag' => $this->normalizeFlag($matchData['player_a_2_flag'] ?? null),
                         'position' => 2,
                     ],
                     [
                         'side' => 'b',
-                        'player_name' => $matchData['player_b_1'],
+                        'player_name' => $sideBPlayerOne,
+                        'flag' => $this->normalizeFlag($matchData['player_b_1_flag'] ?? null),
                         'position' => 1,
                     ],
                     [
                         'side' => 'b',
-                        'player_name' => $matchData['player_b_2'],
+                        'player_name' => $sideBPlayerTwo,
+                        'flag' => $this->normalizeFlag($matchData['player_b_2_flag'] ?? null),
                         'position' => 2,
                     ],
                 ]);
@@ -372,7 +456,9 @@ new class extends Component {
         $rules = [
             'teamTies' => ['required', 'array', 'size:'.$this->stageRowsCount()],
             'teamTies.*.team_a_name' => ['required', 'string', 'max:255'],
+            'teamTies.*.team_a_flag' => ['nullable', 'string', 'max:16', Rule::in($this->allowedCountryFlags()), 'regex:'.self::COUNTRY_FLAG_EMOJI_REGEX],
             'teamTies.*.team_b_name' => ['required', 'string', 'max:255'],
+            'teamTies.*.team_b_flag' => ['nullable', 'string', 'max:16', Rule::in($this->allowedCountryFlags()), 'regex:'.self::COUNTRY_FLAG_EMOJI_REGEX],
         ];
 
         $validated = $this->validate($rules);
@@ -381,15 +467,30 @@ new class extends Component {
 
         DB::transaction(function () use ($validated, $event, $stage): void {
             foreach ($validated['teamTies'] as $tieData) {
+                $teamAFlag = $this->normalizeFlag($tieData['team_a_flag'] ?? null);
+                $teamBFlag = $this->normalizeFlag($tieData['team_b_flag'] ?? null);
+
                 $teamA = Team::query()->firstOrCreate([
                     'event_id' => $event->id,
                     'name' => $tieData['team_a_name'],
+                ], [
+                    'flag' => $teamAFlag,
                 ]);
 
                 $teamB = Team::query()->firstOrCreate([
                     'event_id' => $event->id,
                     'name' => $tieData['team_b_name'],
+                ], [
+                    'flag' => $teamBFlag,
                 ]);
+
+                if ($teamAFlag !== null && $teamA->flag !== $teamAFlag) {
+                    $teamA->update(['flag' => $teamAFlag]);
+                }
+
+                if ($teamBFlag !== null && $teamB->flag !== $teamBFlag) {
+                    $teamB->update(['flag' => $teamBFlag]);
+                }
 
                 $isTeamABye = $this->isBye($tieData['team_a_name']);
                 $isTeamBBye = $this->isBye($tieData['team_b_name']);
@@ -571,6 +672,7 @@ new class extends Component {
     $tournament = $this->tournament();
     $event = $this->event();
     $stage = $this->stage();
+    $countryOptions = $this->countryOptions();
     $showGenerateNextStageButton = $canManageTournament && app(\App\Services\NextStageService::class)->canShowGenerateButton($stage);
     $ties = $stage->ties()->with(['teamA', 'teamB', 'matches'])->get();
     $matches = $stage->matches()->with('matchPlayers')->get();
@@ -743,9 +845,13 @@ new class extends Component {
                                         </div>
                                     </div>
                                     <div class="mt-1 flex flex-wrap items-center gap-x-1 gap-y-1 text-neutral-700 dark:text-neutral-300">
-                                        <span @class(['font-semibold text-emerald-700 dark:text-emerald-400' => $tie->winner_team_id === $tie->team_a_id])>{{ $tie->teamA?->name }}</span>
+                                        <span @class(['font-semibold text-emerald-700 dark:text-emerald-400' => $tie->winner_team_id === $tie->team_a_id])>
+                                            {{ $tie->teamA?->flag ? $tie->teamA->flag.' ' : '' }}{{ $tie->teamA?->name }}
+                                        </span>
                                         <span class="font-semibold text-neutral-500 mx-2">vs</span>
-                                        <span @class(['font-semibold text-emerald-700 dark:text-emerald-400' => $tie->winner_team_id === $tie->team_b_id])>{{ $tie->teamB?->name }}</span>
+                                        <span @class(['font-semibold text-emerald-700 dark:text-emerald-400' => $tie->winner_team_id === $tie->team_b_id])>
+                                            {{ $tie->teamB?->flag ? $tie->teamB->flag.' ' : '' }}{{ $tie->teamB?->name }}
+                                        </span>
                                         @if ($tieWinner)
                                             <span class="ml-2 text-xs text-neutral-500 dark:text-neutral-400">({{ __('Winner') }}: {{ $tieWinner }} · {{ $winsA }}-{{ $winsB }})</span>
                                         @endif
@@ -760,10 +866,22 @@ new class extends Component {
                             @foreach ($singleMatches as $index => $row)
                                 <div wire:key="single-match-row-{{ $index }}" class="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-800">
                                     <div class="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">{{ $row['match_label'] }}</div>
-                                    <div class="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
-                                        <flux:input wire:model.live="singleMatches.{{ $index }}.player_a" :label="__('Player')" type="text" />
+                                    <div class="grid gap-3 md:grid-cols-[1fr_180px_auto_1fr_180px] md:items-center">
+                                        <flux:input wire:model.live="singleMatches.{{ $index }}.player_a" :label="__('Player A')" type="text" />
+                                        <flux:select wire:model.live="singleMatches.{{ $index }}.player_a_flag" :label="__('Country')">
+                                            <option value="">{{ __('No country') }}</option>
+                                            @foreach ($countryOptions as $flag => $countryName)
+                                                <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
+                                            @endforeach
+                                        </flux:select>
                                         <div class="text-center text-sm font-semibold text-neutral-500">VS</div>
-                                        <flux:input wire:model.live="singleMatches.{{ $index }}.player_b" :label="__('Player')" type="text" />
+                                        <flux:input wire:model.live="singleMatches.{{ $index }}.player_b" :label="__('Player B')" type="text" />
+                                        <flux:select wire:model.live="singleMatches.{{ $index }}.player_b_flag" :label="__('Country')">
+                                            <option value="">{{ __('No country') }}</option>
+                                            @foreach ($countryOptions as $flag => $countryName)
+                                                <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
+                                            @endforeach
+                                        </flux:select>
                                     </div>
                                 </div>
                             @endforeach
@@ -778,11 +896,35 @@ new class extends Component {
                             @foreach ($doubleMatches as $index => $row)
                                 <div wire:key="double-match-row-{{ $index }}" class="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-800">
                                     <div class="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">{{ $row['match_label'] }}</div>
-                                    <div class="grid gap-3 md:grid-cols-2">
+                                    <div class="grid gap-3 md:grid-cols-4">
                                         <flux:input wire:model.live="doubleMatches.{{ $index }}.player_a_1" :label="__('Team A - Player 1')" type="text" />
+                                        <flux:select wire:model.live="doubleMatches.{{ $index }}.player_a_1_flag" :label="__('Country')">
+                                            <option value="">{{ __('No country') }}</option>
+                                            @foreach ($countryOptions as $flag => $countryName)
+                                                <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
+                                            @endforeach
+                                        </flux:select>
                                         <flux:input wire:model.live="doubleMatches.{{ $index }}.player_a_2" :label="__('Team A - Player 2')" type="text" />
+                                        <flux:select wire:model.live="doubleMatches.{{ $index }}.player_a_2_flag" :label="__('Country')">
+                                            <option value="">{{ __('No country') }}</option>
+                                            @foreach ($countryOptions as $flag => $countryName)
+                                                <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
+                                            @endforeach
+                                        </flux:select>
                                         <flux:input wire:model.live="doubleMatches.{{ $index }}.player_b_1" :label="__('Team B - Player 1')" type="text" />
+                                        <flux:select wire:model.live="doubleMatches.{{ $index }}.player_b_1_flag" :label="__('Country')">
+                                            <option value="">{{ __('No country') }}</option>
+                                            @foreach ($countryOptions as $flag => $countryName)
+                                                <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
+                                            @endforeach
+                                        </flux:select>
                                         <flux:input wire:model.live="doubleMatches.{{ $index }}.player_b_2" :label="__('Team B - Player 2')" type="text" />
+                                        <flux:select wire:model.live="doubleMatches.{{ $index }}.player_b_2_flag" :label="__('Country')">
+                                            <option value="">{{ __('No country') }}</option>
+                                            @foreach ($countryOptions as $flag => $countryName)
+                                                <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
+                                            @endforeach
+                                        </flux:select>
                                     </div>
                                 </div>
                             @endforeach
@@ -902,7 +1044,9 @@ new class extends Component {
                 @else
                     @foreach ($teams as $team)
                         <div class="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-800">
-                            <div class="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">{{ $team->name }}</div>
+                            <div class="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">
+                                {{ $team->flag ? $team->flag.' ' : '' }}{{ $team->name }}
+                            </div>
 
                             <div class="space-y-2">
                                 @foreach ($team->teamPlayers as $teamPlayer)
@@ -942,10 +1086,22 @@ new class extends Component {
                 @foreach ($teamTies as $index => $tieRow)
                     <div wire:key="team-tie-row-{{ $index }}" class="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-800">
                         <div class="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">{{ $tieRow['tie_label'] }}</div>
-                        <div class="grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
+                        <div class="grid gap-3 md:grid-cols-[1fr_220px_auto_1fr_220px] md:items-center">
                             <flux:input size="sm" wire:model.live="teamTies.{{ $index }}.team_a_name" :label="__('Team A')" type="text" />
+                            <flux:select size="sm" wire:model.live="teamTies.{{ $index }}.team_a_flag" :label="__('Country')">
+                                <option value="">{{ __('No country') }}</option>
+                                @foreach ($countryOptions as $flag => $countryName)
+                                    <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
+                                @endforeach
+                            </flux:select>
                             <div class="text-center text-sm font-semibold text-neutral-500">VS</div>
                             <flux:input size="sm" wire:model.live="teamTies.{{ $index }}.team_b_name" :label="__('Team B')" type="text" />
+                            <flux:select size="sm" wire:model.live="teamTies.{{ $index }}.team_b_flag" :label="__('Country')">
+                                <option value="">{{ __('No country') }}</option>
+                                @foreach ($countryOptions as $flag => $countryName)
+                                    <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
+                                @endforeach
+                            </flux:select>
                         </div>
                     </div>
                 @endforeach

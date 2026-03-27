@@ -149,9 +149,13 @@ new class extends Component {
                     {{ $event->event_name }} — {{ $stage->name }}
                 </flux:subheading>
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-neutral-700 dark:text-neutral-200">
-                    <span @class(['font-semibold text-emerald-700 dark:text-emerald-400' => $tie->winner_team_id === $tie->team_a_id])>{{ $tie->teamA?->name }}</span>
+                    <span @class(['font-semibold text-emerald-700 dark:text-emerald-400' => $tie->winner_team_id === $tie->team_a_id])>
+                        {{ $tie->teamA?->flag ? $tie->teamA->flag.' ' : '' }}{{ $tie->teamA?->name }}
+                    </span>
                     <span class="font-semibold text-neutral-500">{{ __('vs') }}</span>
-                    <span @class(['font-semibold text-emerald-700 dark:text-emerald-400' => $tie->winner_team_id === $tie->team_b_id])>{{ $tie->teamB?->name }}</span>
+                    <span @class(['font-semibold text-emerald-700 dark:text-emerald-400' => $tie->winner_team_id === $tie->team_b_id])>
+                        {{ $tie->teamB?->flag ? $tie->teamB->flag.' ' : '' }}{{ $tie->teamB?->name }}
+                    </span>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
                     <span @class([
@@ -179,7 +183,7 @@ new class extends Component {
     </div>
 
     <div class="rounded-2xl border border-neutral-200 bg-white p-7 dark:border-neutral-700 dark:bg-zinc-900">
-        <flux:heading class="mb-4 text-base font-semibold">{{ __('Matches') }} (S1 → S3)</flux:heading>
+        <flux:heading class="mb-4 text-base font-semibold">{{ __('Matches') }}</flux:heading>
 
         <div class="space-y-3">
             @foreach ($innerMatches as $match)
@@ -196,7 +200,7 @@ new class extends Component {
                 @endphp
                 <div class="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm dark:border-neutral-700 dark:bg-neutral-800">
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                        <span class="font-semibold">{{ $match->match_order ?? __('Match') }}</span>
+                        <span class="font-semibold">{{ __('Match') }} {{ $loop->iteration }}</span>
                         <div class="flex flex-wrap items-center gap-2">
                             <span @class([
                                 'rounded-full px-2.5 py-0.5 text-xs font-medium',

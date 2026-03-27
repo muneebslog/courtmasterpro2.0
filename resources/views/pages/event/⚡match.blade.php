@@ -138,7 +138,17 @@ new class extends Component {
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <flux:heading class="text-lg font-semibold">
                         @if ($match->tie_id && $match->match_order)
-                            {{ __('Match') }} {{ $match->match_order }}
+                            @php
+                                $tieOrderNumber = match ((string) $match->match_order) {
+                                    'S1' => 1,
+                                    'D1' => 2,
+                                    'S2' => 3,
+                                    'D2' => 4,
+                                    'S3' => 5,
+                                    default => null,
+                                };
+                            @endphp
+                            {{ __('Match') }} {{ $tieOrderNumber ?? $match->match_order }}
                         @elseif ($matchTopLevelSequence !== null)
                             {{ __('Match') }} {{ $matchTopLevelSequence }}
                         @else
@@ -153,12 +163,6 @@ new class extends Component {
                 <div class="text-sm text-neutral-600 dark:text-neutral-300">
                     {{ $match->side_a_label }} <span class="mx-1 font-semibold">vs</span> {{ $match->side_b_label }}
                 </div>
-                @if ($match->match_order)
-                    <div class="text-xs text-neutral-500 dark:text-neutral-400">
-                        {{ __('Match Order') }}: <span class="font-mono">{{ $match->match_order }}</span>
-                    </div>
-                @endif
-
                 @if ($match->tie_id && $match->tie)
                     <div class="text-xs text-neutral-600 dark:text-neutral-300">
                         {{ __('Tie') }}: {{ $match->tie->teamA?->name }} vs {{ $match->tie->teamB?->name }}
