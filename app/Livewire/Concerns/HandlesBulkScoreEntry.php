@@ -75,6 +75,15 @@ trait HandlesBulkScoreEntry
             return;
         }
 
+        if ($match->tie_id !== null && $match->matchPlayers()->count() === 0) {
+            $this->addError(
+                'bulkScores',
+                __('Assign players from the match control panel before entering scores for tie matches.')
+            );
+
+            return;
+        }
+
         $gamesToAdd = [];
         foreach ($this->bulkScores as $gameNum => $scores) {
             $scoreA = trim((string) ($scores['score_a'] ?? ''));

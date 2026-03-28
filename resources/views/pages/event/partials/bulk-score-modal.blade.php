@@ -44,7 +44,7 @@
                                     min="0"
                                     max="30"
                                     size="sm"
-                                    wire:model.live="bulkScores.{{ $gameNum }}.score_a"
+                                    wire:model.live.debounce.350ms="bulkScores.{{ $gameNum }}.score_a"
                                     :label="__('Score A')"
                                     class="w-20"
                                 />
@@ -54,7 +54,7 @@
                                     min="0"
                                     max="30"
                                     size="sm"
-                                    wire:model.live="bulkScores.{{ $gameNum }}.score_b"
+                                    wire:model.live.debounce.350ms="bulkScores.{{ $gameNum }}.score_b"
                                     :label="__('Score B')"
                                     class="w-20"
                                 />

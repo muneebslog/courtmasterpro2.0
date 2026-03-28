@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LiveScoreController;
 use App\Http\Controllers\MatchPdfController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\TiePdfController;
 use App\Http\Controllers\TournamentController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -77,6 +78,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'tournaments/{tournament}/events/{event}/stages/{stage}/matches/{match}/pdf',
         [MatchPdfController::class, 'download']
     )->name('tournaments.events.stages.matches.pdf');
+
+    Route::get(
+        'tournaments/{tournament}/events/{event}/stages/{stage}/ties/{tie}/pdf',
+        [TiePdfController::class, 'download']
+    )->name('tournaments.events.stages.ties.pdf');
 });
 
 require __DIR__.'/settings.php';

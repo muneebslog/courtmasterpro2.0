@@ -6,10 +6,14 @@ use App\Models\MatchEvent;
 use App\Models\MatchModel;
 use App\Models\MatchPlayer;
 use App\Models\Stage;
+use App\Models\TeamPlayer;
+use App\Models\Tie;
 use App\Models\Tournament;
 use App\Models\User;
 use App\Services\TieResultService;
+use App\Support\PlayerNameFormatter;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 new class extends Component {
@@ -28,6 +32,17 @@ new class extends Component {
     public string $serviceJudgeName = '';
 
     public string $court = '';
+
+    /** @var 'singles'|'doubles' */
+    public string $teamLineupFormat = 'singles';
+
+    public ?int $sideATeamPlayer1Id = null;
+
+    public ?int $sideATeamPlayer2Id = null;
+
+    public ?int $sideBTeamPlayer1Id = null;
+
+    public ?int $sideBTeamPlayer2Id = null;
 
     public string $occurrenceType = 'card';
 
@@ -62,6 +77,8 @@ new class extends Component {
         $this->umpireName = $matchModel->umpire_name ?? '';
         $this->serviceJudgeName = $matchModel->service_judge_name ?? '';
         $this->court = $matchModel->court ?? '';
+
+        $this->hydrateTeamLineupDefaults($matchModel);
 
         if ($matchModel->status === 'pending') {
             $this->showPreStartModal = true;
@@ -110,7 +127,11 @@ new class extends Component {
         return MatchModel::query()
             ->where('stage_id', $this->stageId)
             ->whereKey($this->matchId)
-            ->with(['games' => fn ($q) => $q->orderBy('game_number')])
+            ->with([
+                'games' => fn ($q) => $q->orderBy('game_number'),
+                'tie.teamA.teamPlayers',
+                'tie.teamB.teamPlayers',
+            ])
             ->firstOrFail();
     }
 
@@ -130,8 +151,103 @@ new class extends Component {
         return false;
     }
 
+    private function hydrateTeamLineupDefaults(MatchModel $match): void
+    {
+        if ($match->status !== 'pending' || $match->tie_id === null) {
+            return;
+        }
+
+        $event = Event::query()->whereKey($this->eventId)->first();
+        if (! $event || $event->event_type !== Event::EVENT_TYPE_TEAM) {
+            return;
+        }
+
+        $order = (string) $match->match_order;
+        $this->teamLineupFormat = str_starts_with($order, 'D') ? 'doubles' : 'singles';
+        $this->sideATeamPlayer1Id = null;
+        $this->sideATeamPlayer2Id = null;
+        $this->sideBTeamPlayer1Id = null;
+        $this->sideBTeamPlayer2Id = null;
+    }
+
+    /**
+     * @return array{a: list<TeamPlayer>, b: list<TeamPlayer>}
+     */
+    private function resolveTeamLineupForStartMatch(Tie $tie): array
+    {
+        $teamAId = (int) $tie->team_a_id;
+        $teamBId = (int) $tie->team_b_id;
+
+        if ($this->teamLineupFormat === 'singles') {
+            $idsA = array_filter([$this->sideATeamPlayer1Id]);
+            $idsB = array_filter([$this->sideBTeamPlayer1Id]);
+        } else {
+            $idsA = array_filter([$this->sideATeamPlayer1Id, $this->sideATeamPlayer2Id]);
+            $idsB = array_filter([$this->sideBTeamPlayer1Id, $this->sideBTeamPlayer2Id]);
+        }
+
+        if ($this->teamLineupFormat === 'singles') {
+            if (count($idsA) !== 1 || count($idsB) !== 1) {
+                throw new \InvalidArgumentException(__('Select one player for each side.'));
+            }
+        } elseif (count($idsA) !== 2 || count($idsB) !== 2) {
+            throw new \InvalidArgumentException(__('Select two players for each side.'));
+        }
+
+        $uniqueA = array_unique($idsA);
+        $uniqueB = array_unique($idsB);
+        if (count($uniqueA) !== count($idsA) || count($uniqueB) !== count($idsB)) {
+            throw new \InvalidArgumentException(__('Duplicate players are not allowed on the same side.'));
+        }
+
+        $rosterACount = $tie->teamA?->teamPlayers->count() ?? 0;
+        $rosterBCount = $tie->teamB?->teamPlayers->count() ?? 0;
+        if ($rosterACount === 0 || $rosterBCount === 0) {
+            throw new \InvalidArgumentException(__('Add players to both team rosters on the stage setup before starting a tie match.'));
+        }
+
+        $allIds = array_values(array_unique([...$idsA, ...$idsB]));
+        $byId = TeamPlayer::query()->whereIn('id', $allIds)->get()->keyBy('id');
+
+        /** @var list<TeamPlayer> $playersA */
+        $playersA = [];
+        foreach ($idsA as $id) {
+            $player = $byId->get($id);
+            if (! $player instanceof TeamPlayer || (int) $player->team_id !== $teamAId) {
+                throw new \InvalidArgumentException(__('Each selected player must belong to the correct team roster.'));
+            }
+            $playersA[] = $player;
+        }
+
+        /** @var list<TeamPlayer> $playersB */
+        $playersB = [];
+        foreach ($idsB as $id) {
+            $player = $byId->get($id);
+            if (! $player instanceof TeamPlayer || (int) $player->team_id !== $teamBId) {
+                throw new \InvalidArgumentException(__('Each selected player must belong to the correct team roster.'));
+            }
+            $playersB[] = $player;
+        }
+
+        return ['a' => $playersA, 'b' => $playersB];
+    }
+
+    /**
+     * @param  list<TeamPlayer>  $players
+     */
+    private function formatSideLabelFromTeamPlayers(array $players, ?string $teamFlag): string
+    {
+        $parts = [];
+        foreach ($players as $p) {
+            $parts[] = PlayerNameFormatter::formatWithFlag($p->player_name, $teamFlag);
+        }
+
+        return implode(' / ', $parts);
+    }
+
     public function openPreStartModal(): void
     {
+        $this->hydrateTeamLineupDefaults($this->match());
         $this->showPreStartModal = true;
     }
 
@@ -171,15 +287,17 @@ new class extends Component {
             return;
         }
 
-        $nextNum = $this->gameEndNextRoundNumber ?? 1;
-        if ($nextNum <= $match->best_of) {
-            $match->games()->create([
-                'game_number' => $nextNum,
-                'score_a' => 0,
-                'score_b' => 0,
-                'winner_side' => null,
-                'entry_mode' => 'live',
-            ]);
+        $nextNum = $this->gameEndNextRoundNumber;
+        if ($nextNum !== null && $nextNum <= $match->best_of) {
+            $match->games()->firstOrCreate(
+                ['game_number' => $nextNum],
+                [
+                    'score_a' => 0,
+                    'score_b' => 0,
+                    'winner_side' => null,
+                    'entry_mode' => 'live',
+                ]
+            );
         }
 
         $this->closeGameEndModal();
@@ -217,13 +335,88 @@ new class extends Component {
             }
         }
 
-        $this->validate([
+        $needsTeamLineup = $isTeamEvent && $match->tie_id !== null;
+
+        $rules = [
             'umpireName' => ['nullable', 'string', 'max:255'],
             'serviceJudgeName' => ['nullable', 'string', 'max:255'],
             'court' => ['nullable', 'string', 'max:255'],
-        ]);
+        ];
 
-        DB::transaction(function () use ($match): void {
+        if ($needsTeamLineup) {
+            $rules['teamLineupFormat'] = ['required', Rule::in(['singles', 'doubles'])];
+            if ($this->teamLineupFormat === 'singles') {
+                $rules['sideATeamPlayer1Id'] = ['required', 'integer'];
+                $rules['sideBTeamPlayer1Id'] = ['required', 'integer'];
+                $rules['sideATeamPlayer2Id'] = ['nullable', 'integer'];
+                $rules['sideBTeamPlayer2Id'] = ['nullable', 'integer'];
+            } else {
+                $rules['sideATeamPlayer1Id'] = ['required', 'integer'];
+                $rules['sideATeamPlayer2Id'] = ['required', 'integer'];
+                $rules['sideBTeamPlayer1Id'] = ['required', 'integer'];
+                $rules['sideBTeamPlayer2Id'] = ['required', 'integer'];
+            }
+        }
+
+        $this->validate($rules);
+
+        $lineup = null;
+        $tieForLineup = null;
+
+        if ($needsTeamLineup) {
+            $tieForLineup = Tie::query()
+                ->with(['teamA.teamPlayers', 'teamB.teamPlayers'])
+                ->whereKey((int) $match->tie_id)
+                ->firstOrFail();
+
+            try {
+                $lineup = $this->resolveTeamLineupForStartMatch($tieForLineup);
+            } catch (\InvalidArgumentException $e) {
+                $this->addError('teamLineupFormat', $e->getMessage());
+
+                return;
+            }
+        }
+
+        DB::transaction(function () use ($match, $needsTeamLineup, $lineup, $tieForLineup): void {
+            if ($needsTeamLineup && $lineup !== null && $tieForLineup !== null) {
+                $flagA = $tieForLineup->teamA?->flag;
+                $flagB = $tieForLineup->teamB?->flag;
+                $normalizedFlagA = PlayerNameFormatter::normalizeFlag($flagA);
+                $normalizedFlagB = PlayerNameFormatter::normalizeFlag($flagB);
+
+                $match->matchPlayers()->delete();
+
+                $posA = 1;
+                foreach ($lineup['a'] as $tp) {
+                    $display = PlayerNameFormatter::formatWithFlag($tp->player_name, $flagA);
+                    $match->matchPlayers()->create([
+                        'side' => 'a',
+                        'player_name' => $display,
+                        'flag' => $normalizedFlagA,
+                        'position' => $posA++,
+                        'team_player_id' => $tp->id,
+                    ]);
+                }
+
+                $posB = 1;
+                foreach ($lineup['b'] as $tp) {
+                    $display = PlayerNameFormatter::formatWithFlag($tp->player_name, $flagB);
+                    $match->matchPlayers()->create([
+                        'side' => 'b',
+                        'player_name' => $display,
+                        'flag' => $normalizedFlagB,
+                        'position' => $posB++,
+                        'team_player_id' => $tp->id,
+                    ]);
+                }
+
+                $match->update([
+                    'side_a_label' => $this->formatSideLabelFromTeamPlayers($lineup['a'], $flagA),
+                    'side_b_label' => $this->formatSideLabelFromTeamPlayers($lineup['b'], $flagB),
+                ]);
+            }
+
             $match->update([
                 'status' => 'in_progress',
                 'umpire_name' => $this->umpireName ?: null,
@@ -242,6 +435,15 @@ new class extends Component {
                 ]
             );
 
+            $startedNotes = null;
+            if ($needsTeamLineup && $lineup !== null) {
+                $startedNotes = json_encode([
+                    'team_lineup_format' => $this->teamLineupFormat,
+                    'side_a' => array_map(fn (TeamPlayer $p): string => $p->player_name, $lineup['a']),
+                    'side_b' => array_map(fn (TeamPlayer $p): string => $p->player_name, $lineup['b']),
+                ], JSON_THROW_ON_ERROR);
+            }
+
             $match->matchEvents()->create([
                 'game_id' => $game->id,
                 'event_type' => 'match_started',
@@ -249,7 +451,7 @@ new class extends Component {
                 'player_name' => null,
                 'score_a_at_time' => 0,
                 'score_b_at_time' => 0,
-                'notes' => null,
+                'notes' => $startedNotes,
                 'created_by' => 'umpire',
             ]);
         });
@@ -266,6 +468,13 @@ new class extends Component {
 
         $match = $this->match();
         if ($match->status === 'completed' || $match->status === 'walkover' || $match->status === 'retired') {
+            return;
+        }
+
+        $eventForPoint = $this->event();
+        if ($match->status === 'pending'
+            && $eventForPoint->event_type === Event::EVENT_TYPE_TEAM
+            && $match->tie_id !== null) {
             return;
         }
 
@@ -295,13 +504,15 @@ new class extends Component {
                 if ($nextNum > $match->best_of) {
                     return;
                 }
-                $game = $match->games()->create([
-                    'game_number' => $nextNum,
-                    'score_a' => 0,
-                    'score_b' => 0,
-                    'winner_side' => null,
-                    'entry_mode' => 'live',
-                ]);
+                $game = $match->games()->firstOrCreate(
+                    ['game_number' => $nextNum],
+                    [
+                        'score_a' => 0,
+                        'score_b' => 0,
+                        'winner_side' => null,
+                        'entry_mode' => 'live',
+                    ]
+                );
             }
 
             $scoreA = $game->score_a + ($side === 'a' ? 1 : 0);
@@ -322,6 +533,8 @@ new class extends Component {
 
             $this->checkGameWinner($match, $game);
         });
+
+        $this->syncGameEndModalWithMatchState();
     }
 
     public function undoLastPoint(): void
@@ -365,6 +578,28 @@ new class extends Component {
                 'created_by' => 'umpire',
             ]);
         });
+    }
+
+    /**
+     * When scoring is very fast, the next round may be created by a subsequent
+     * `addPoint` before the user dismisses the game-end modal. Close the modal
+     * if the expected next round row already exists.
+     */
+    private function syncGameEndModalWithMatchState(): void
+    {
+        if (! $this->showGameEndModal || $this->gameEndIsMatchOver) {
+            return;
+        }
+
+        $nextNum = $this->gameEndNextRoundNumber;
+        if ($nextNum === null) {
+            return;
+        }
+
+        $match = $this->match();
+        if ($match->games()->where('game_number', $nextNum)->exists()) {
+            $this->closeGameEndModal();
+        }
     }
 
     private function checkGameWinner(MatchModel $match, Game $game): void
@@ -553,7 +788,13 @@ new class extends Component {
     $tournament = $this->tournament();
     $event = $this->event();
     $stage = $this->stage();
-    $match = $this->match()->load(['games' => fn ($q) => $q->orderBy('game_number'), 'matchPlayers', 'matchEvents' => fn ($q) => $q->with('game')->orderByDesc('created_at')]);
+    $match = $this->match()->load([
+        'games' => fn ($q) => $q->orderBy('game_number'),
+        'matchPlayers',
+        'tie.teamA.teamPlayers',
+        'tie.teamB.teamPlayers',
+        'matchEvents' => fn ($q) => $q->with('game')->orderByDesc('created_at'),
+    ]);
 
     $matchTopLevelSequence = $match->topLevelSequenceInStage();
 
@@ -587,6 +828,13 @@ new class extends Component {
     $badgeColor = $badgeColors[$match->status] ?? 'neutral';
 
     $isTeamEvent = $event->event_type === Event::EVENT_TYPE_TEAM;
+    $showTeamLineupInPrestartModal = $isTeamEvent && $match->tie_id && $match->status === 'pending';
+    $teamLineupSideARoster = $showTeamLineupInPrestartModal && $match->tie?->teamA
+        ? $match->tie->teamA->teamPlayers->sortBy('player_name')->values()
+        : collect();
+    $teamLineupSideBRoster = $showTeamLineupInPrestartModal && $match->tie?->teamB
+        ? $match->tie->teamB->teamPlayers->sortBy('player_name')->values()
+        : collect();
     $canScore = ! in_array($match->status, ['completed', 'walkover', 'retired', 'not_required'], true);
     $playersForOccurrence = $match->matchPlayers->where('side', $this->occurrenceSide)->values();
 @endphp
@@ -894,15 +1142,87 @@ new class extends Component {
     name="pre-start-modal"
     wire:model.self="showPreStartModal"
     focusable
-    class="max-w-lg"
+    class="max-w-xl"
     :dismissible="false"
     :closable="false"
 >
     <form wire:submit.prevent="startMatch" class="space-y-6">
         <div class="space-y-2">
             <flux:heading size="lg">{{ __('Start Match') }}</flux:heading>
-            <flux:subheading>{{ __('Enter umpire, service judge, and court details.') }}</flux:subheading>
+            <flux:subheading>
+                @if ($showTeamLineupInPrestartModal)
+                    {{ __('Choose singles or doubles, pick players from each team roster, then enter officials and court.') }}
+                @else
+                    {{ __('Enter umpire, service judge, and court details.') }}
+                @endif
+            </flux:subheading>
         </div>
+
+        @if ($showTeamLineupInPrestartModal)
+            <div class="space-y-4 rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-600 dark:bg-neutral-800/50">
+                <flux:field>
+                    <flux:label>{{ __('This match is') }}</flux:label>
+                    <flux:radio.group wire:model.live="teamLineupFormat" variant="segmented" class="flex flex-wrap gap-2">
+                        <flux:radio value="singles">{{ __('Singles') }}</flux:radio>
+                        <flux:radio value="doubles">{{ __('Doubles') }}</flux:radio>
+                    </flux:radio.group>
+                </flux:field>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="space-y-3">
+                        <p class="text-sm font-semibold text-neutral-800 dark:text-neutral-100">
+                            {{ $match->tie?->teamA?->flag ? $match->tie->teamA->flag.' ' : '' }}{{ $match->tie?->teamA?->name ?? __('Team A') }}
+                        </p>
+                        <flux:field>
+                            <flux:label>{{ __('Player') }} 1</flux:label>
+                            <flux:select wire:model="sideATeamPlayer1Id" placeholder="{{ __('Select player') }}">
+                                <option value="">{{ __('—') }}</option>
+                                @foreach ($teamLineupSideARoster as $tp)
+                                    <option value="{{ $tp->id }}">{{ $tp->player_name }}</option>
+                                @endforeach
+                            </flux:select>
+                        </flux:field>
+                        @if ($this->teamLineupFormat === 'doubles')
+                            <flux:field>
+                                <flux:label>{{ __('Player') }} 2</flux:label>
+                                <flux:select wire:model="sideATeamPlayer2Id" placeholder="{{ __('Select player') }}">
+                                    <option value="">{{ __('—') }}</option>
+                                    @foreach ($teamLineupSideARoster as $tp)
+                                        <option value="{{ $tp->id }}">{{ $tp->player_name }}</option>
+                                    @endforeach
+                                </flux:select>
+                            </flux:field>
+                        @endif
+                    </div>
+                    <div class="space-y-3">
+                        <p class="text-sm font-semibold text-neutral-800 dark:text-neutral-100">
+                            {{ $match->tie?->teamB?->flag ? $match->tie->teamB->flag.' ' : '' }}{{ $match->tie?->teamB?->name ?? __('Team B') }}
+                        </p>
+                        <flux:field>
+                            <flux:label>{{ __('Player') }} 1</flux:label>
+                            <flux:select wire:model="sideBTeamPlayer1Id" placeholder="{{ __('Select player') }}">
+                                <option value="">{{ __('—') }}</option>
+                                @foreach ($teamLineupSideBRoster as $tp)
+                                    <option value="{{ $tp->id }}">{{ $tp->player_name }}</option>
+                                @endforeach
+                            </flux:select>
+                        </flux:field>
+                        @if ($this->teamLineupFormat === 'doubles')
+                            <flux:field>
+                                <flux:label>{{ __('Player') }} 2</flux:label>
+                                <flux:select wire:model="sideBTeamPlayer2Id" placeholder="{{ __('Select player') }}">
+                                    <option value="">{{ __('—') }}</option>
+                                    @foreach ($teamLineupSideBRoster as $tp)
+                                        <option value="{{ $tp->id }}">{{ $tp->player_name }}</option>
+                                    @endforeach
+                                </flux:select>
+                            </flux:field>
+                        @endif
+                    </div>
+                </div>
+                <flux:error name="teamLineupFormat" />
+            </div>
+        @endif
 
         <div class="space-y-4">
             <flux:field>

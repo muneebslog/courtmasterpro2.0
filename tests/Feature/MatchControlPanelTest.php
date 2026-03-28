@@ -318,6 +318,167 @@ test('game winner detected at 21 with 2 point lead and next game created', funct
     expect($game2->score_b)->toBe(0);
 });
 
+test('rapid scoring after round end closes stale game end modal and does not duplicate next round', function (): void {
+    /** @var TestCase $this */
+    $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+    $tournament = Tournament::create([
+        'tournament_name' => 'National Open 2026',
+        'location' => 'Peshawar',
+        'start_date' => now()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'status' => 'draft',
+        'admin_id' => $admin->id,
+    ]);
+    $event = TournamentEvent::create([
+        'tournament_id' => $tournament->id,
+        'event_name' => 'Singles',
+        'event_type' => TournamentEvent::EVENT_TYPE_SINGLES,
+    ]);
+    $stage = Stage::create([
+        'event_id' => $event->id,
+        'name' => 'Final',
+        'best_of' => 3,
+        'order_index' => 1,
+        'status' => 'pending',
+    ]);
+    $match = MatchModel::create([
+        'stage_id' => $stage->id,
+        'tie_id' => null,
+        'side_a_label' => 'Alice',
+        'side_b_label' => 'Bob',
+        'match_order' => null,
+        'best_of' => 3,
+        'status' => 'in_progress',
+        'winner_side' => null,
+        'umpire_name' => null,
+        'service_judge_name' => null,
+        'court' => null,
+        'started_at' => now(),
+        'ended_at' => null,
+    ]);
+    MatchPlayer::create(['match_id' => $match->id, 'side' => 'a', 'player_name' => 'Alice', 'position' => 1]);
+    MatchPlayer::create(['match_id' => $match->id, 'side' => 'b', 'player_name' => 'Bob', 'position' => 1]);
+
+    Game::create([
+        'match_id' => $match->id,
+        'game_number' => 1,
+        'score_a' => 20,
+        'score_b' => 19,
+        'winner_side' => null,
+        'entry_mode' => 'live',
+        'started_at' => null,
+        'ended_at' => null,
+    ]);
+
+    $this->actingAs($admin);
+
+    $component = Livewire::test('pages::event.match.controlpanel', [
+        'tournament' => $tournament->id,
+        'event' => $event->id,
+        'stage' => $stage->id,
+        'match' => $match->id,
+    ])
+        ->call('addPoint', 'a')
+        ->assertHasNoErrors()
+        ->assertSet('showGameEndModal', true);
+
+    expect($match->games()->where('game_number', 2)->count())->toBe(0);
+
+    $component
+        ->call('addPoint', 'a')
+        ->assertHasNoErrors()
+        ->assertSet('showGameEndModal', false);
+
+    expect($match->games()->where('game_number', 2)->count())->toBe(1);
+    $game2 = $match->games()->where('game_number', 2)->first();
+    expect($game2->score_a)->toBe(1);
+    expect($game2->score_b)->toBe(0);
+});
+
+test('start next round is idempotent when next round already exists', function (): void {
+    /** @var TestCase $this */
+    $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+    $tournament = Tournament::create([
+        'tournament_name' => 'National Open 2026',
+        'location' => 'Peshawar',
+        'start_date' => now()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'status' => 'draft',
+        'admin_id' => $admin->id,
+    ]);
+    $event = TournamentEvent::create([
+        'tournament_id' => $tournament->id,
+        'event_name' => 'Singles',
+        'event_type' => TournamentEvent::EVENT_TYPE_SINGLES,
+    ]);
+    $stage = Stage::create([
+        'event_id' => $event->id,
+        'name' => 'Final',
+        'best_of' => 3,
+        'order_index' => 1,
+        'status' => 'pending',
+    ]);
+    $match = MatchModel::create([
+        'stage_id' => $stage->id,
+        'tie_id' => null,
+        'side_a_label' => 'Alice',
+        'side_b_label' => 'Bob',
+        'match_order' => null,
+        'best_of' => 3,
+        'status' => 'in_progress',
+        'winner_side' => null,
+        'umpire_name' => null,
+        'service_judge_name' => null,
+        'court' => null,
+        'started_at' => now(),
+        'ended_at' => null,
+    ]);
+    MatchPlayer::create(['match_id' => $match->id, 'side' => 'a', 'player_name' => 'Alice', 'position' => 1]);
+    MatchPlayer::create(['match_id' => $match->id, 'side' => 'b', 'player_name' => 'Bob', 'position' => 1]);
+
+    Game::create([
+        'match_id' => $match->id,
+        'game_number' => 1,
+        'score_a' => 21,
+        'score_b' => 19,
+        'winner_side' => 'a',
+        'entry_mode' => 'live',
+        'started_at' => null,
+        'ended_at' => now(),
+    ]);
+    Game::create([
+        'match_id' => $match->id,
+        'game_number' => 2,
+        'score_a' => 0,
+        'score_b' => 0,
+        'winner_side' => null,
+        'entry_mode' => 'live',
+        'started_at' => null,
+        'ended_at' => null,
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test('pages::event.match.controlpanel', [
+        'tournament' => $tournament->id,
+        'event' => $event->id,
+        'stage' => $stage->id,
+        'match' => $match->id,
+    ])
+        ->set('showGameEndModal', true)
+        ->set('gameEndWinnerLabel', 'Alice')
+        ->set('gameEndScoreA', 21)
+        ->set('gameEndScoreB', 19)
+        ->set('gameEndGameNumber', 1)
+        ->set('gameEndNextRoundNumber', 2)
+        ->set('gameEndIsMatchOver', false)
+        ->call('startNextRound')
+        ->assertHasNoErrors()
+        ->assertSet('showGameEndModal', false);
+
+    expect($match->games()->where('game_number', 2)->count())->toBe(1);
+});
+
 test('match winner detected when required games won', function (): void {
     /** @var TestCase $this */
     $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);

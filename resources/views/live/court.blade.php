@@ -112,7 +112,7 @@
             font-family: 'Oswald', sans-serif;
             font-size: clamp(14px, 3.5vw, 18px);
             letter-spacing: 0.12em;
-            color: #aaa;
+            color: #3f3b3b;
             text-transform: uppercase;
             white-space: nowrap;
             overflow: hidden;
@@ -347,67 +347,118 @@
         .scoreboard-container {
             width: 100vw;
             height: 100vh;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
-            padding: 2vh 2vw;
-            gap: 2vh;
+            padding: 1vh 1.25vw;
+            gap: 1vh;
             background: #000;
+            box-sizing: border-box;
         }
 
         .footer {
             background: #fff;
-            border: 0.5vh solid #000;
-            border-radius: 1.5vh;
-            padding: 2vh 3vw;
-            height: 12vh;
+            border: 0.35vh solid #000;
+            border-radius: 1.2vh;
+            padding: 1vh 2vw;
+            min-height: 10vh;
             display: flex;
             align-items: center;
             justify-content: space-between;
-        }
-
-        .footer-title {
-            font-size: 3vh;
-            font-weight: 900;
-            color: #000;
-            text-transform: uppercase;
-            letter-spacing: 0.2vw;
-            display: flex;
-            align-items: center;
             gap: 2vw;
         }
 
-        .footer-logo {
-            height: 60px;
-            width: auto;
+        .footer-left {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .footer-tournament {
+            font-size: clamp(1.1rem, 2.6vh, 3.2vh);
+            font-weight: 900;
+            color: #000;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            line-height: 1.2;
+        }
+
+        .footer-right {
+            flex-shrink: 0;
+            max-width: 55%;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+            text-align: right;
+            gap: 0.5vh;
+        }
+
+        .footer-event {
+            font-size: clamp(1rem, 2.2vh, 2.8vh);
+            font-weight: 800;
+            color: #111;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            line-height: 1.2;
+        }
+
+        .footer-badge {
+            display: inline-block;
+            padding: 0.35vh 1.1vw;
+            border-radius: 0.5vh;
+            font-size: clamp(0.65rem, 1.35vh, 1.6vh);
+            font-weight: 900;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            border: 0.2vh solid #000;
+        }
+
+        .footer-badge.is-live {
+            background: #0d7a3e;
+            color: #fff;
+            border-color: #065a2c;
+            box-shadow: 0 0.2vh 0.5vh rgba(13, 122, 62, 0.35);
+        }
+
+        .footer-badge.is-finished {
+            background: #1a1a1a;
+            color: #e0e0e0;
+            border-color: #333;
         }
 
         .scoreboard {
             flex: 1;
-            border: 0.5vh solid #000;
-            border-radius: 1.5vh;
+            min-height: 0;
+            border: 0.35vh solid #000;
+            border-radius: 1.2vh;
             display: flex;
             flex-direction: column;
-            gap: 2vh;
+            gap: 1vh;
             background: #000;
-            padding: 2vh;
+            padding: 1vh;
         }
 
         .teams-container {
             flex: 1;
+            min-height: 0;
             display: flex;
             flex-direction: column;
-            gap: 2vh;
+            gap: 1vh;
         }
 
         .team-row {
             flex: 1;
+            min-height: 0;
             background: linear-gradient(to right, #2a2a2a 0%, #1a1a1a 100%);
-            border: 0.4vh solid #444;
-            border-radius: 1.5vh;
+            border: 0.3vh solid #444;
+            border-radius: 1.2vh;
             display: flex;
             align-items: center;
-            padding: 0 3vw;
-            box-shadow: 0 0.8vh 2vh rgba(0, 0, 0, 0.5);
+            padding: 0 1.5vw;
+            box-shadow: 0 0.5vh 1.25vh rgba(0, 0, 0, 0.5);
             position: relative;
         }
 
@@ -415,47 +466,77 @@
             width: 10vh;
             height: 10vh;
             border-radius: 1vh;
-            margin-right: 2vw;
+            margin-right: 1.25vw;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             border: 0.3vh solid rgba(255, 255, 255, 0.1);
-            font-size: 5vh;
+            overflow: hidden;
+        }
+
+        .team-flag-emoji {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            font-size: 6.5vh;
+            line-height: 1;
         }
 
         .logo-team1 {
-            background: linear-gradient(135deg, #2196f3 0%, #1565c0 100%);
+            /* background: linear-gradient(135deg, #2196f3 0%, #1565c0 100%); */
         }
 
         .logo-team2 {
-            background: linear-gradient(135deg, #ff3d00 0%, #d50000 100%);
+            /* background: linear-gradient(135deg, #ff3d00 0%, #d50000 100%); */
         }
 
         .team-info {
             flex-grow: 1;
+            min-width: 0;
+            min-height: 0;
             display: flex;
             flex-direction: column;
-            gap: 0.5vh;
+            gap: 0.35vh;
+            justify-content: center;
         }
 
         .team-name {
             color: #ffffff;
-            font-size: 8vh;
+            font-size: clamp(1.25rem, 5vh, 8vh);
             font-weight: 900;
             letter-spacing: 0.2vw;
             text-transform: uppercase;
             text-shadow: 0.3vh 0.3vh 0.5vh rgba(0, 0, 0, 0.8);
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
-            gap: 2vw;
+            gap: 0.35em 2vw;
+            line-height: 1.15;
         }
 
-        .team-name img.emoji {
+        /* Twemoji: cap all emoji imgs so intrinsic SVG size cannot blow up the row */
+        #board img.emoji {
             width: 0.95em;
             height: 0.95em;
+            max-width: 6vh;
+            max-height: 6vh;
             margin: 0 0.08em 0 0;
             vertical-align: -0.08em;
+            object-fit: contain;
+        }
+
+        /* Flag in left column: fill the colored box (Twemoji replaces emoji with img) */
+        #board .team-logo img.emoji {
+            width: 8vh;
+            height: 8vh;
+            max-width: 88%;
+            max-height: 88%;
+            margin: 0;
+            vertical-align: 0;
+            object-fit: contain;
         }
 
         .player-names {
@@ -489,9 +570,9 @@
 
         .cards-container {
             display: flex;
-            gap: 1vw;
+            gap: 0.75vw;
             align-items: center;
-            margin-left: 2vw;
+            margin-left: 1.25vw;
         }
 
         .card-badge {
@@ -538,47 +619,54 @@
 
         .scores {
             display: flex;
-            gap: 1.5vw;
+            gap: 0.85vw;
             align-items: center;
+            align-self: center;
+            flex-shrink: 0;
         }
 
         .round-score {
             background: #790d0d;
             color: #fff;
-            border-radius: 1vh;
-            font-size: 18vh;
+            border-radius: 0.85vh;
+            font-size: clamp(2rem, min(24vh, 17vw), 26vh);
             font-weight: 900;
-            min-width: 7vw;
+            min-width: 6.5vw;
             text-align: center;
-            border: 0.3vh solid #333;
-            box-shadow: inset 0 0.5vh 1vh rgba(0, 0, 0, 0.8);
+            border: 0.25vh solid #333;
+            box-shadow: inset 0 0.35vh 0.75vh rgba(0, 0, 0, 0.8);
             font-family: 'Impact', 'Arial Black', sans-serif;
+            line-height: 1;
+            /* padding: 0.06em 0.14em; */
         }
 
         .current-score {
             background: linear-gradient(135deg, #d50000 0%, #8b0000 100%);
             color: #fff;
-            border-radius: 1vh;
-            font-size: 15vh;
+            border-radius: 0.85vh;
+            font-size: clamp(1.5rem, min(20vh, 15vw), 20vh);
             font-weight: 900;
-            min-width: 9vw;
+            min-width: 8vw;
             text-align: center;
-            border: 0.4vh solid #ff1744;
-            box-shadow: 0 0.5vh 2vh rgba(213, 0, 0, 0.6), inset 0 -0.3vh 1vh rgba(0, 0, 0, 0.3);
+            border: 0.3vh solid #ff1744;
+            box-shadow: 0 0.35vh 1.5vh rgba(213, 0, 0, 0.6), inset 0 -0.25vh 0.75vh rgba(0, 0, 0, 0.3);
             font-family: 'Impact', 'Arial Black', sans-serif;
+            line-height: 1;
+            padding: 0.06em 0.14em;
         }
 
         .wins-indicator {
             background: linear-gradient(135deg, #ffd700 0%, #ffa000 100%);
             color: #000;
-            padding: 1vh 1vw;
-            border-radius: 1vh;
-            font-size: 6vh;
+            padding: 0.55vh 0.7vw;
+            border-radius: 0.85vh;
+            font-size: clamp(1rem, min(5vh, 6vw), 7.5vh);
             font-weight: 900;
-            min-width: 6vw;
+            min-width: 5.5vw;
             text-align: center;
-            border: 0.3vh solid #ffeb3b;
-            box-shadow: 0 0.5vh 1.5vh rgba(255, 215, 0, 0.4);
+            border: 0.25vh solid #ffeb3b;
+            box-shadow: 0 0.35vh 1.1vh rgba(255, 215, 0, 0.4);
+            line-height: 1;
         }
 
         button {
@@ -606,6 +694,7 @@
         .subtext-container {
             font-size: 0.875rem;
             line-height: 1.25rem;
+            color: #fff;
         }
 
         .fullscreen-btn {
@@ -650,11 +739,12 @@
         <div class="board-inner" id="board-inner">
             <div class="scoreboard-container" id="scoreboard-container">
                 <div class="footer">
-                    <div class="footer-title">
-                        <span id="banner-event" class="event-title"></span>
+                    <div class="footer-left">
+                        <span id="banner-tournament" class="footer-tournament"></span>
                     </div>
-                    <div class="">
-                        <img src="https://v1.badmintonscorer.online/img/sponser.jpeg" alt="Logo" class="footer-logo">
+                    <div class="footer-right">
+                        <span id="banner-event" class="footer-event"></span>
+                        <span id="banner-status" class="footer-badge" aria-live="polite"></span>
                     </div>
                 </div>
 
@@ -662,7 +752,9 @@
                     <div class="teams-container">
                         <!-- Team 1 -->
                         <div class="team-row">
-                            <div class="team-logo logo-team1">🏸</div>
+                            <div class="team-logo logo-team1" aria-hidden="true">
+                                <span id="team1Flag" class="team-flag-emoji"></span>
+                            </div>
 
                             <div class="team-info">
                                 <div class="team-name">
@@ -684,7 +776,9 @@
 
                         <!-- Team 2 -->
                         <div class="team-row">
-                            <div class="team-logo logo-team2">🏸</div>
+                            <div class="team-logo logo-team2" aria-hidden="true">
+                                <span id="team2Flag" class="team-flag-emoji"></span>
+                            </div>
 
                             <div class="team-info">
                                 <div class="team-name">
@@ -720,10 +814,14 @@
             var boardEl = document.getElementById('board');
             var errEl = document.getElementById('load-err');
 
+            var bannerTournamentEl = document.getElementById('banner-tournament');
             var bannerEventEl = document.getElementById('banner-event');
+            var bannerStatusEl = document.getElementById('banner-status');
 
             var team1NameEl = document.getElementById('team1Name');
             var team2NameEl = document.getElementById('team2Name');
+            var team1FlagEl = document.getElementById('team1Flag');
+            var team2FlagEl = document.getElementById('team2Flag');
             var team1SubEl = document.getElementById('team1Sub');
             var team2SubEl = document.getElementById('team2Sub');
 
@@ -794,6 +892,16 @@
                 if (!data || !data.match) {
                     idleEl.style.display = 'block';
                     boardEl.className = 'board';
+                    if (bannerTournamentEl) {
+                        bannerTournamentEl.textContent = '';
+                    }
+                    if (bannerEventEl) {
+                        bannerEventEl.textContent = '';
+                    }
+                    if (bannerStatusEl) {
+                        bannerStatusEl.textContent = '';
+                        bannerStatusEl.className = 'footer-badge';
+                    }
                     return;
                 }
 
@@ -801,13 +909,40 @@
                 idleEl.style.display = 'none';
                 boardEl.className = 'board is-on';
 
-                bannerEventEl.textContent = m.event_name || '{{ __('Match') }}';
-                team1NameEl.textContent = m.side_a_label || '—';
-                team2NameEl.textContent = m.side_b_label || '—';
+                if (bannerTournamentEl) {
+                    bannerTournamentEl.textContent = m.tournament_name ? String(m.tournament_name) : '';
+                }
+                if (bannerEventEl) {
+                    bannerEventEl.textContent = m.event_name || '{{ __('Match') }}';
+                }
+                if (bannerStatusEl) {
+                    if (m.is_live === false) {
+                        bannerStatusEl.textContent = '{{ __('Finished') }}';
+                        bannerStatusEl.className = 'footer-badge is-finished';
+                    } else {
+                        bannerStatusEl.textContent = '{{ __('Live') }}';
+                        bannerStatusEl.className = 'footer-badge is-live';
+                    }
+                }
 
-                var subText = m.stage_name || '';
-                team1SubEl.textContent = subText;
-                team2SubEl.textContent = subText;
+                var flagA = (m.side_a_flag && String(m.side_a_flag)) || '';
+                var flagB = (m.side_b_flag && String(m.side_b_flag)) || '';
+                if (team1FlagEl) {
+                    team1FlagEl.textContent = flagA;
+                }
+                if (team2FlagEl) {
+                    team2FlagEl.textContent = flagB;
+                }
+
+                var nameA = m.side_a_label || '—';
+                var nameB = m.side_b_label || '—';
+                team1NameEl.textContent = nameA;
+                team2NameEl.textContent = nameB;
+
+                var subA = (m.subtitle_a && String(m.subtitle_a).length) ? m.subtitle_a : (m.stage_name || '');
+                var subB = (m.subtitle_b && String(m.subtitle_b).length) ? m.subtitle_b : (m.stage_name || '');
+                team1SubEl.textContent = subA;
+                team2SubEl.textContent = subB;
 
                 var slots = buildSlots(m);
 

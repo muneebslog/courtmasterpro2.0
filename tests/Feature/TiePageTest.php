@@ -75,6 +75,7 @@ test('admin can view tie page with inner matches in order', function (): void {
         'tie' => $tie->id,
     ])
         ->assertOk()
+        ->assertSee(__('Tie progress'))
         ->assertSee('Match 1')
         ->assertSee('Match 2')
         ->assertSee('Match 3')

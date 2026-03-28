@@ -106,7 +106,12 @@ new class extends Component {
     $stage = $this->stage();
     $tie = Tie::query()
         ->whereKey($this->tieId)
-        ->with(['teamA', 'teamB', 'matches.matchPlayers'])
+        ->with([
+            'teamA',
+            'teamB',
+            'matches.matchPlayers',
+            'matches.games' => fn ($q) => $q->orderBy('game_number'),
+        ])
         ->firstOrFail();
 
     $matchOrderIndex = ['S1' => 0, 'D1' => 1, 'S2' => 2, 'D2' => 3, 'S3' => 4];
@@ -129,8 +134,9 @@ new class extends Component {
         ? MatchModel::query()->where('stage_id', $stage->id)->whereKey($this->bulkScoreMatchId)->with(['games' => fn ($q) => $q->orderBy('game_number')])->first()
         : null;
 
-    $winsA = $tie->matches->where('winner_side', 'a')->count();
-    $winsB = $tie->matches->where('winner_side', 'b')->count();
+    $rubberStatuses = ['completed', 'walkover', 'retired', 'not_required'];
+    $winsA = $tie->matches->whereIn('status', $rubberStatuses)->where('winner_side', 'a')->count();
+    $winsB = $tie->matches->whereIn('status', $rubberStatuses)->where('winner_side', 'b')->count();
     $tieWinner = $tie->winner_team_id ? ($tie->team_a_id === $tie->winner_team_id ? $tie->teamA?->name : $tie->teamB?->name) : null;
 @endphp
 
@@ -161,9 +167,16 @@ new class extends Component {
                     <span @class([
                         'rounded-full px-2.5 py-0.5 text-xs font-medium',
                         'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' => $tie->status === 'completed',
+                        'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-300' => $tie->status === 'in_progress',
                         'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' => $tie->status === 'pending',
                     ])>
-                        {{ $tie->status === 'completed' ? __('Completed') : __('Pending') }}
+                        @if ($tie->status === 'completed')
+                            {{ __('Completed') }}
+                        @elseif ($tie->status === 'in_progress')
+                            {{ __('In progress') }}
+                        @else
+                            {{ __('Pending') }}
+                        @endif
                     </span>
                     <span>{{ __('Rubber score') }}: {{ $winsA }}–{{ $winsB }}</span>
                     @if ($tieWinner)
@@ -172,18 +185,31 @@ new class extends Component {
                 </div>
             </div>
 
-            <a
-                wire:navigate
-                href="{{ route('tournaments.events.stages.show', ['tournament' => $tournament->id, 'event' => $event->id, 'stage' => $stage->id]) }}"
-                class="inline-flex items-center rounded-md border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
-            >
-                {{ __('Back to Stage') }}
-            </a>
+            <div class="flex flex-wrap items-center gap-2">
+                <a
+                    href="{{ route('tournaments.events.stages.ties.pdf', ['tournament' => $tournament->id, 'event' => $event->id, 'stage' => $stage->id, 'tie' => $tie->id]) }}"
+                    target="_blank"
+                    class="inline-flex items-center gap-2 rounded-md border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                >
+                    <flux:icon name="printer" class="size-4" />
+                    {{ __('Print / Download PDF') }}
+                </a>
+                <a
+                    wire:navigate
+                    href="{{ route('tournaments.events.stages.show', ['tournament' => $tournament->id, 'event' => $event->id, 'stage' => $stage->id]) }}"
+                    class="inline-flex items-center rounded-md border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                >
+                    {{ __('Back to Stage') }}
+                </a>
+            </div>
         </div>
     </div>
 
     <div class="rounded-2xl border border-neutral-200 bg-white p-7 dark:border-neutral-700 dark:bg-zinc-900">
-        <flux:heading class="mb-4 text-base font-semibold">{{ __('Matches') }}</flux:heading>
+        <flux:heading class="mb-4 text-base font-semibold">{{ __('Tie progress') }}</flux:heading>
+        <p class="mb-6 text-sm text-neutral-600 dark:text-neutral-400">
+            {{ __('Rubbers are played in order S1 → D1 → S2 → D2 → S3. Choose singles or doubles and select roster players for each rubber from the control panel.') }}
+        </p>
 
         <div class="space-y-3">
             @foreach ($innerMatches as $match)
@@ -195,19 +221,34 @@ new class extends Component {
                         'walkover' => __('Walkover'),
                         'retired' => __('Retired'),
                         'not_required' => __('NOT REQUIRED'),
+                        'in_progress' => __('In progress'),
+                        'pending' => __('Pending'),
                     ];
                     $isCurrentTieMatch = $currentTieMatchId !== null && (int) $currentTieMatchId === (int) $match->id;
+                    $sideAPlayers = $match->matchPlayers->where('side', 'a')->sortBy('position')->values();
+                    $sideBPlayers = $match->matchPlayers->where('side', 'b')->sortBy('position')->values();
+                    $lineupA = $sideAPlayers->pluck('player_name')->filter()->implode(' / ');
+                    $lineupB = $sideBPlayers->pluck('player_name')->filter()->implode(' / ');
+                    $rubberAfterA = $innerMatches->take($loop->iteration)->whereIn('status', $rubberStatuses)->where('winner_side', 'a')->count();
+                    $rubberAfterB = $innerMatches->take($loop->iteration)->whereIn('status', $rubberStatuses)->where('winner_side', 'b')->count();
                 @endphp
                 <div class="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm dark:border-neutral-700 dark:bg-neutral-800">
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                        <span class="font-semibold">{{ __('Match') }} {{ $loop->iteration }}</span>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="font-semibold">{{ __('Match') }} {{ $loop->iteration }}</span>
+                            @if ($match->match_order)
+                                <span class="rounded-md bg-neutral-200/80 px-2 py-0.5 text-xs font-medium text-neutral-700 dark:bg-neutral-700 dark:text-neutral-200">
+                                    {{ $match->match_order }}
+                                </span>
+                            @endif
+                        </div>
                         <div class="flex flex-wrap items-center gap-2">
                             <span @class([
                                 'rounded-full px-2.5 py-0.5 text-xs font-medium',
                                 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' => $matchEnded,
                                 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' => ! $matchEnded,
                             ])>
-                                {{ $matchEnded ? ($statusLabels[$match->status] ?? __('Completed')) : __('Pending') }}
+                                {{ $statusLabels[$match->status] ?? $match->status }}
                             </span>
                             <span class="text-xs font-normal text-neutral-400 dark:text-neutral-500">id {{ $match->id }}</span>
                         </div>
@@ -219,6 +260,32 @@ new class extends Component {
                         @if ($winnerLabel)
                             <span class="ml-2 text-xs text-neutral-500 dark:text-neutral-400">({{ __('Winner') }}: {{ $winnerLabel }})</span>
                         @endif
+                    </div>
+                    <div class="mt-2 space-y-1 text-xs text-neutral-600 dark:text-neutral-400">
+                        @if ($lineupA !== '' || $lineupB !== '')
+                            <div>
+                                <span class="font-medium text-neutral-700 dark:text-neutral-300">{{ $tie->teamA?->name }}:</span>
+                                {{ $lineupA !== '' ? $lineupA : __('Not assigned') }}
+                            </div>
+                            <div>
+                                <span class="font-medium text-neutral-700 dark:text-neutral-300">{{ $tie->teamB?->name }}:</span>
+                                {{ $lineupB !== '' ? $lineupB : __('Not assigned') }}
+                            </div>
+                        @else
+                            <p class="text-amber-700 dark:text-amber-400">
+                                {{ __('No lineup yet — open the control panel to pick players from each roster.') }}
+                            </p>
+                        @endif
+                        @if ($match->games->isNotEmpty())
+                            <div class="mt-2 font-mono text-neutral-700 dark:text-neutral-300">
+                                @foreach ($match->games as $g)
+                                    <span class="me-3 inline-block">{{ __('G') }}{{ $g->game_number }}: {{ $g->score_a }}–{{ $g->score_b }}</span>
+                                @endforeach
+                            </div>
+                        @endif
+                        <div class="text-neutral-500 dark:text-neutral-500">
+                            {{ __('Rubber score after this match') }}: {{ $rubberAfterA }}–{{ $rubberAfterB }}
+                        </div>
                     </div>
                     <div class="mt-3 flex flex-wrap justify-end gap-2">
                         @if (! $matchEnded)

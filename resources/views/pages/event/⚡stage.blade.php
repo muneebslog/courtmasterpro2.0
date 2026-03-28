@@ -867,7 +867,7 @@ new class extends Component {
                                 <div wire:key="single-match-row-{{ $index }}" class="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-800">
                                     <div class="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">{{ $row['match_label'] }}</div>
                                     <div class="grid gap-3 md:grid-cols-[1fr_180px_auto_1fr_180px] md:items-center">
-                                        <flux:input wire:model.live="singleMatches.{{ $index }}.player_a" :label="__('Player A')" type="text" />
+                                        <flux:input wire:model.live.debounce.350ms="singleMatches.{{ $index }}.player_a" :label="__('Player A')" type="text" />
                                         <flux:select wire:model.live="singleMatches.{{ $index }}.player_a_flag" :label="__('Country')">
                                             <option value="">{{ __('No country') }}</option>
                                             @foreach ($countryOptions as $flag => $countryName)
@@ -875,7 +875,7 @@ new class extends Component {
                                             @endforeach
                                         </flux:select>
                                         <div class="text-center text-sm font-semibold text-neutral-500">VS</div>
-                                        <flux:input wire:model.live="singleMatches.{{ $index }}.player_b" :label="__('Player B')" type="text" />
+                                        <flux:input wire:model.live.debounce.350ms="singleMatches.{{ $index }}.player_b" :label="__('Player B')" type="text" />
                                         <flux:select wire:model.live="singleMatches.{{ $index }}.player_b_flag" :label="__('Country')">
                                             <option value="">{{ __('No country') }}</option>
                                             @foreach ($countryOptions as $flag => $countryName)
@@ -897,28 +897,28 @@ new class extends Component {
                                 <div wire:key="double-match-row-{{ $index }}" class="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-800">
                                     <div class="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">{{ $row['match_label'] }}</div>
                                     <div class="grid gap-3 md:grid-cols-4">
-                                        <flux:input wire:model.live="doubleMatches.{{ $index }}.player_a_1" :label="__('Team A - Player 1')" type="text" />
+                                        <flux:input wire:model.live.debounce.350ms="doubleMatches.{{ $index }}.player_a_1" :label="__('Team A - Player 1')" type="text" />
                                         <flux:select wire:model.live="doubleMatches.{{ $index }}.player_a_1_flag" :label="__('Country')">
                                             <option value="">{{ __('No country') }}</option>
                                             @foreach ($countryOptions as $flag => $countryName)
                                                 <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
                                             @endforeach
                                         </flux:select>
-                                        <flux:input wire:model.live="doubleMatches.{{ $index }}.player_a_2" :label="__('Team A - Player 2')" type="text" />
+                                        <flux:input wire:model.live.debounce.350ms="doubleMatches.{{ $index }}.player_a_2" :label="__('Team A - Player 2')" type="text" />
                                         <flux:select wire:model.live="doubleMatches.{{ $index }}.player_a_2_flag" :label="__('Country')">
                                             <option value="">{{ __('No country') }}</option>
                                             @foreach ($countryOptions as $flag => $countryName)
                                                 <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
                                             @endforeach
                                         </flux:select>
-                                        <flux:input wire:model.live="doubleMatches.{{ $index }}.player_b_1" :label="__('Team B - Player 1')" type="text" />
+                                        <flux:input wire:model.live.debounce.350ms="doubleMatches.{{ $index }}.player_b_1" :label="__('Team B - Player 1')" type="text" />
                                         <flux:select wire:model.live="doubleMatches.{{ $index }}.player_b_1_flag" :label="__('Country')">
                                             <option value="">{{ __('No country') }}</option>
                                             @foreach ($countryOptions as $flag => $countryName)
                                                 <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
                                             @endforeach
                                         </flux:select>
-                                        <flux:input wire:model.live="doubleMatches.{{ $index }}.player_b_2" :label="__('Team B - Player 2')" type="text" />
+                                        <flux:input wire:model.live.debounce.350ms="doubleMatches.{{ $index }}.player_b_2" :label="__('Team B - Player 2')" type="text" />
                                         <flux:select wire:model.live="doubleMatches.{{ $index }}.player_b_2_flag" :label="__('Country')">
                                             <option value="">{{ __('No country') }}</option>
                                             @foreach ($countryOptions as $flag => $countryName)
@@ -1056,7 +1056,7 @@ new class extends Component {
 
                             @if ($canManageTournament)
                                 <div class="mt-4 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
-                                    <flux:input wire:model.live="teamPlayerInputs.{{ $team->id }}" :label="__('Player Name')" type="text" />
+                                    <flux:input wire:model.live.debounce.350ms="teamPlayerInputs.{{ $team->id }}" :label="__('Player Name')" type="text" />
                                     <flux:button variant="primary" wire:click="addTeamPlayer({{ $team->id }})">
                                         {{ __('Add Player') }}
                                     </flux:button>
@@ -1087,7 +1087,7 @@ new class extends Component {
                     <div wire:key="team-tie-row-{{ $index }}" class="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-800">
                         <div class="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">{{ $tieRow['tie_label'] }}</div>
                         <div class="grid gap-3 md:grid-cols-[1fr_220px_auto_1fr_220px] md:items-center">
-                            <flux:input size="sm" wire:model.live="teamTies.{{ $index }}.team_a_name" :label="__('Team A')" type="text" />
+                            <flux:input size="sm" wire:model.live.debounce.350ms="teamTies.{{ $index }}.team_a_name" :label="__('Team A')" type="text" />
                             <flux:select size="sm" wire:model.live="teamTies.{{ $index }}.team_a_flag" :label="__('Country')">
                                 <option value="">{{ __('No country') }}</option>
                                 @foreach ($countryOptions as $flag => $countryName)
@@ -1095,7 +1095,7 @@ new class extends Component {
                                 @endforeach
                             </flux:select>
                             <div class="text-center text-sm font-semibold text-neutral-500">VS</div>
-                            <flux:input size="sm" wire:model.live="teamTies.{{ $index }}.team_b_name" :label="__('Team B')" type="text" />
+                            <flux:input size="sm" wire:model.live.debounce.350ms="teamTies.{{ $index }}.team_b_name" :label="__('Team B')" type="text" />
                             <flux:select size="sm" wire:model.live="teamTies.{{ $index }}.team_b_flag" :label="__('Country')">
                                 <option value="">{{ __('No country') }}</option>
                                 @foreach ($countryOptions as $flag => $countryName)

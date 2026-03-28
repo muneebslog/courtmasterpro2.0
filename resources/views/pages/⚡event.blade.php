@@ -497,7 +497,7 @@ new class extends Component {
 
                 <div class="space-y-2">
                     <flux:input
-                        wire:model.live="create_stage_matches"
+                        wire:model.live.debounce.350ms="create_stage_matches"
                         :label="__('Number of matches (Round 1)')"
                         type="number"
                         requiredf
