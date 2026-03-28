@@ -725,6 +725,60 @@ test('admin can create team ties and linked teams from stage setup', function ()
     expect(MatchModel::query()->where('stage_id', $stage->id)->count())->toBe(10);
 });
 
+test('admin can create team ties in countries mode storing country names when custom labels are empty', function (): void {
+    /** @var TestCase $this */
+    /** @var User $admin */
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    $tournament = Tournament::create([
+        'tournament_name' => 'International Team 2026',
+        'location' => 'Test',
+        'start_date' => now()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'status' => 'draft',
+        'admin_id' => $admin->id,
+    ]);
+
+    $event = Event::create([
+        'tournament_id' => $tournament->id,
+        'event_name' => 'International Team',
+        'event_type' => Event::EVENT_TYPE_TEAM,
+    ]);
+
+    $stage = Stage::create([
+        'event_id' => $event->id,
+        'name' => 'Final',
+        'best_of' => 5,
+        'order_index' => 1,
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test('pages::event.stage', [
+        'tournament' => $tournament->id,
+        'event' => $event->id,
+        'stage' => $stage->id,
+    ])
+        ->assertOk()
+        ->call('openCreationFlow')
+        ->set('teamTieSideLabelMode', 'countries')
+        ->set('teamTies.0.team_a_flag', '🇵🇰')
+        ->set('teamTies.0.team_b_flag', '🇺🇸')
+        ->call('createTeamTies')
+        ->assertHasNoErrors();
+
+    $pakistan = Team::query()->where('event_id', $event->id)->where('name', 'Pakistan')->firstOrFail();
+    expect($pakistan->flag)->toBe('🇵🇰');
+
+    $unitedStates = Team::query()->where('event_id', $event->id)->where('name', 'United States')->firstOrFail();
+    expect($unitedStates->flag)->toBe('🇺🇸');
+
+    expect(Tie::query()->where('stage_id', $stage->id)->count())->toBe(1);
+});
+
 test('admin can add team player from team players tab', function (): void {
     /** @var TestCase $this */
     /** @var User $admin */

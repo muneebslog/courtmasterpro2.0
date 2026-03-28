@@ -53,6 +53,13 @@ new class extends Component {
 
     private const COUNTRY_FLAG_EMOJI_REGEX = '/^[\x{1F1E6}-\x{1F1FF}]{2}$/u';
 
+    private const TEAM_TIE_MODE_TEAMS = 'teams';
+
+    private const TEAM_TIE_MODE_COUNTRIES = 'countries';
+
+    /** @var 'teams'|'countries' */
+    public string $teamTieSideLabelMode = self::TEAM_TIE_MODE_TEAMS;
+
     public function mount(int $tournament, int $event, int $stage): void
     {
         $this->tournamentId = $tournament;
@@ -275,6 +282,8 @@ new class extends Component {
 
     private function prepareTeamTieRows(): void
     {
+        $this->teamTieSideLabelMode = self::TEAM_TIE_MODE_TEAMS;
+
         $rows = [];
         for ($index = 1; $index <= $this->stageRowsCount(); $index++) {
             $rows[] = [
@@ -287,6 +296,31 @@ new class extends Component {
         }
 
         $this->teamTies = $rows;
+    }
+
+    private function resolveTeamTieSideDisplayName(bool $isCountriesMode, string $rawName, ?string $normalizedFlag): string
+    {
+        $trimmed = trim($rawName);
+
+        if ($this->isBye($trimmed)) {
+            return $trimmed;
+        }
+
+        if (! $isCountriesMode) {
+            return $trimmed;
+        }
+
+        if ($trimmed !== '') {
+            return $trimmed;
+        }
+
+        if ($normalizedFlag !== null) {
+            $countries = $this->countryOptions();
+
+            return $countries[$normalizedFlag] ?? '';
+        }
+
+        return '';
     }
 
     public function createSinglesMatches(): void
@@ -453,33 +487,77 @@ new class extends Component {
         abort_unless($this->canAdminister($tournament), 403);
         abort_unless($this->event()->event_type === Event::EVENT_TYPE_TEAM, 422);
 
+        $isCountriesMode = $this->teamTieSideLabelMode === self::TEAM_TIE_MODE_COUNTRIES;
+
         $rules = [
+            'teamTieSideLabelMode' => ['required', 'string', Rule::in([self::TEAM_TIE_MODE_TEAMS, self::TEAM_TIE_MODE_COUNTRIES])],
             'teamTies' => ['required', 'array', 'size:'.$this->stageRowsCount()],
-            'teamTies.*.team_a_name' => ['required', 'string', 'max:255'],
             'teamTies.*.team_a_flag' => ['nullable', 'string', 'max:16', Rule::in($this->allowedCountryFlags()), 'regex:'.self::COUNTRY_FLAG_EMOJI_REGEX],
-            'teamTies.*.team_b_name' => ['required', 'string', 'max:255'],
             'teamTies.*.team_b_flag' => ['nullable', 'string', 'max:16', Rule::in($this->allowedCountryFlags()), 'regex:'.self::COUNTRY_FLAG_EMOJI_REGEX],
         ];
 
+        if ($isCountriesMode) {
+            $rules['teamTies.*.team_a_name'] = ['nullable', 'string', 'max:255'];
+            $rules['teamTies.*.team_b_name'] = ['nullable', 'string', 'max:255'];
+        } else {
+            $rules['teamTies.*.team_a_name'] = ['required', 'string', 'max:255'];
+            $rules['teamTies.*.team_b_name'] = ['required', 'string', 'max:255'];
+        }
+
         $validated = $this->validate($rules);
+
+        $hadCountriesModeErrors = false;
+
+        if ($isCountriesMode) {
+            foreach ($validated['teamTies'] as $index => $tieData) {
+                foreach (['a', 'b'] as $side) {
+                    $nameKey = 'team_'.$side.'_name';
+                    $flagKey = 'team_'.$side.'_flag';
+                    $rawName = (string) ($tieData[$nameKey] ?? '');
+                    $flag = $this->normalizeFlag($tieData[$flagKey] ?? null);
+
+                    if (! $this->isBye($rawName) && $flag === null && trim($rawName) === '') {
+                        $this->addError('teamTies.'.$index.'.'.$nameKey, __('Choose a country or enter a name (or Bye).'));
+                        $hadCountriesModeErrors = true;
+                    }
+                }
+            }
+        }
+
+        if ($hadCountriesModeErrors) {
+            return;
+        }
+
         $event = $this->event();
         $stage = $this->stage();
 
-        DB::transaction(function () use ($validated, $event, $stage): void {
+        DB::transaction(function () use ($validated, $event, $stage, $isCountriesMode): void {
             foreach ($validated['teamTies'] as $tieData) {
                 $teamAFlag = $this->normalizeFlag($tieData['team_a_flag'] ?? null);
                 $teamBFlag = $this->normalizeFlag($tieData['team_b_flag'] ?? null);
 
+                $teamAName = $this->resolveTeamTieSideDisplayName(
+                    $isCountriesMode,
+                    (string) ($tieData['team_a_name'] ?? ''),
+                    $teamAFlag,
+                );
+
+                $teamBName = $this->resolveTeamTieSideDisplayName(
+                    $isCountriesMode,
+                    (string) ($tieData['team_b_name'] ?? ''),
+                    $teamBFlag,
+                );
+
                 $teamA = Team::query()->firstOrCreate([
                     'event_id' => $event->id,
-                    'name' => $tieData['team_a_name'],
+                    'name' => $teamAName,
                 ], [
                     'flag' => $teamAFlag,
                 ]);
 
                 $teamB = Team::query()->firstOrCreate([
                     'event_id' => $event->id,
-                    'name' => $tieData['team_b_name'],
+                    'name' => $teamBName,
                 ], [
                     'flag' => $teamBFlag,
                 ]);
@@ -492,8 +570,8 @@ new class extends Component {
                     $teamB->update(['flag' => $teamBFlag]);
                 }
 
-                $isTeamABye = $this->isBye($tieData['team_a_name']);
-                $isTeamBBye = $this->isBye($tieData['team_b_name']);
+                $isTeamABye = $this->isBye($teamAName);
+                $isTeamBBye = $this->isBye($teamBName);
 
                 $winnerTeamId = null;
                 $status = 'pending';
@@ -1079,30 +1157,65 @@ new class extends Component {
         <form wire:submit="createTeamTies" class="space-y-6">
             <div class="space-y-2">
                 <flux:heading size="lg">{{ __('Create Ties') }}</flux:heading>
-                <flux:subheading>{{ __('Enter Team A vs Team B for each tie row.') }}</flux:subheading>
+                <flux:subheading>{{ __('Enter each tie row. Switch between team names and countries depending on your event.') }}</flux:subheading>
             </div>
+
+            <flux:field>
+                <flux:label>{{ __('Sides are') }}</flux:label>
+                <flux:radio.group wire:model.live="teamTieSideLabelMode" variant="segmented" class="flex flex-wrap gap-2">
+                    <flux:radio value="teams" icon="building-office-2">{{ __('Team names') }}</flux:radio>
+                    <flux:radio value="countries" icon="globe-alt">{{ __('Countries') }}</flux:radio>
+                </flux:radio.group>
+                <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+                    @if ($teamTieSideLabelMode === 'countries')
+                        {{ __('Pick a country for each side. Leave the text field empty to use the country name as the team name, or type a custom label. Type "Bye" in the text field when needed.') }}
+                    @else
+                        {{ __('Enter club or local names. Add a country only when you want a flag on scoreboards and printouts.') }}
+                    @endif
+                </p>
+            </flux:field>
 
             <div class="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
                 @foreach ($teamTies as $index => $tieRow)
-                    <div wire:key="team-tie-row-{{ $index }}" class="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-800">
+                    <div wire:key="team-tie-row-{{ $index }}-{{ $teamTieSideLabelMode }}" class="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-800">
                         <div class="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">{{ $tieRow['tie_label'] }}</div>
-                        <div class="grid gap-3 md:grid-cols-[1fr_220px_auto_1fr_220px] md:items-center">
-                            <flux:input size="sm" wire:model.live.debounce.350ms="teamTies.{{ $index }}.team_a_name" :label="__('Team A')" type="text" />
-                            <flux:select size="sm" wire:model.live="teamTies.{{ $index }}.team_a_flag" :label="__('Country')">
-                                <option value="">{{ __('No country') }}</option>
-                                @foreach ($countryOptions as $flag => $countryName)
-                                    <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
-                                @endforeach
-                            </flux:select>
-                            <div class="text-center text-sm font-semibold text-neutral-500">VS</div>
-                            <flux:input size="sm" wire:model.live.debounce.350ms="teamTies.{{ $index }}.team_b_name" :label="__('Team B')" type="text" />
-                            <flux:select size="sm" wire:model.live="teamTies.{{ $index }}.team_b_flag" :label="__('Country')">
-                                <option value="">{{ __('No country') }}</option>
-                                @foreach ($countryOptions as $flag => $countryName)
-                                    <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
-                                @endforeach
-                            </flux:select>
-                        </div>
+                        @if ($teamTieSideLabelMode === 'countries')
+                            <div class="grid gap-3 md:grid-cols-[minmax(0,220px)_1fr_auto_minmax(0,220px)_1fr] md:items-end">
+                                <flux:select size="sm" wire:model.live="teamTies.{{ $index }}.team_a_flag" :label="__('Country')">
+                                    <option value="">{{ __('Select country') }}</option>
+                                    @foreach ($countryOptions as $flag => $countryName)
+                                        <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
+                                    @endforeach
+                                </flux:select>
+                                <flux:input size="sm" wire:model.live.debounce.350ms="teamTies.{{ $index }}.team_a_name" :label="__('Custom name (optional)')" type="text" placeholder="{{ __('Or type Bye') }}" />
+                                <div class="text-center text-sm font-semibold text-neutral-500 md:pb-2">VS</div>
+                                <flux:select size="sm" wire:model.live="teamTies.{{ $index }}.team_b_flag" :label="__('Country')">
+                                    <option value="">{{ __('Select country') }}</option>
+                                    @foreach ($countryOptions as $flag => $countryName)
+                                        <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
+                                    @endforeach
+                                </flux:select>
+                                <flux:input size="sm" wire:model.live.debounce.350ms="teamTies.{{ $index }}.team_b_name" :label="__('Custom name (optional)')" type="text" placeholder="{{ __('Or type Bye') }}" />
+                            </div>
+                        @else
+                            <div class="grid gap-3 md:grid-cols-[1fr_minmax(0,220px)_auto_1fr_minmax(0,220px)] md:items-end">
+                                <flux:input size="sm" wire:model.live.debounce.350ms="teamTies.{{ $index }}.team_a_name" :label="__('Team A')" type="text" />
+                                <flux:select size="sm" wire:model.live="teamTies.{{ $index }}.team_a_flag" :label="__('Country (optional)')">
+                                    <option value="">{{ __('No country') }}</option>
+                                    @foreach ($countryOptions as $flag => $countryName)
+                                        <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
+                                    @endforeach
+                                </flux:select>
+                                <div class="text-center text-sm font-semibold text-neutral-500 md:pb-2">VS</div>
+                                <flux:input size="sm" wire:model.live.debounce.350ms="teamTies.{{ $index }}.team_b_name" :label="__('Team B')" type="text" />
+                                <flux:select size="sm" wire:model.live="teamTies.{{ $index }}.team_b_flag" :label="__('Country (optional)')">
+                                    <option value="">{{ __('No country') }}</option>
+                                    @foreach ($countryOptions as $flag => $countryName)
+                                        <option value="{{ $flag }}">{{ $countryName }} ({{ $flag }})</option>
+                                    @endforeach
+                                </flux:select>
+                            </div>
+                        @endif
                     </div>
                 @endforeach
             </div>
