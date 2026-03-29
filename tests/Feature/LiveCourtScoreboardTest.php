@@ -12,6 +12,8 @@ test('welcome page shows hall screen links for courts 1 through 4', function ():
 
     $response->assertOk();
 
+    $response->assertSee(route('live.all'), false);
+
     foreach (range(1, 4) as $n) {
         $response->assertSee('Screen '.$n, false);
         $response->assertSee(route('live.court', ['court' => $n]), false);
@@ -293,7 +295,18 @@ test('live court display page loads standalone scoreboard shell', function (): v
         ->assertSee('banner-tournament', false)
         ->assertSee('footer-tournament', false)
         ->assertSee('team1Flag', false)
-        ->assertSee('team2Flag', false);
+        ->assertSee('team2Flag', false)
+        ->assertSee('id="fullscreenBtn"', false)
+        ->assertSee(route('live.all'), false)
+        ->assertSee('class="all-screens-btn"', false);
+});
+
+test('live court page hides fullscreen control when embedded in all courts view', function (): void {
+    $response = $this->get(route('live.court', ['court' => 2, 'embed' => '1']));
+
+    $response->assertOk()
+        ->assertDontSee('id="fullscreenBtn"', false)
+        ->assertDontSee('class="all-screens-btn"', false);
 });
 
 test('live court route rejects court numbers outside 1 to 4', function (): void {
@@ -306,9 +319,10 @@ test('live all page embeds court iframes for courts 1 through 4', function (): v
     $response = $this->get(route('live.all'));
 
     $response->assertOk()
-        ->assertSee('<iframe', false);
+        ->assertSee('<iframe', false)
+        ->assertSee('id="fullscreenBtn"', false);
 
     foreach (range(1, 4) as $n) {
-        $response->assertSee(route('live.court', ['court' => $n]), false);
+        $response->assertSee(route('live.court', ['court' => $n, 'embed' => '1']), false);
     }
 });
