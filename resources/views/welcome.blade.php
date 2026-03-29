@@ -100,9 +100,9 @@
 
     <footer class="py-10 text-center text-xs text-[#b5b5b0]">
         &copy; {{ date('Y') }} Badminton Tournament Manager. Built By <a href="muneebbuilds.com">Muhammad Muneeb</a>.
-        {{-- Hall screens: assign Court as 1–5 in the match control panel so it matches these links. --}}
+        {{-- Hall screens: assign Court as 1–4 in the match control panel so it matches these links. --}}
         <div class="mt-6 flex flex-wrap items-center justify-center gap-2">
-            @foreach (range(1, 5) as $screen)
+            @foreach (range(1, 4) as $screen)
                 <a href="{{ route('live.court', ['court' => $screen]) }}"
                     class="inline-block rounded border border-[#19140020] dark:border-[#3E3E3A] px-2.5 py-1 text-[11px] font-medium text-[#706f6c] hover:border-[#19140035] hover:bg-[#f4f4f4] dark:text-[#A1A09A] dark:hover:bg-[#1e1e1d]">
                     Screen {{ $screen }}

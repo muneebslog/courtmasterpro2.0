@@ -391,7 +391,7 @@ new class extends Component {
 
     <flux:modal
         name="edit-tournament-user-modal"
-        :show="$showEditModal"
+        wire:model.self="showEditModal"
         focusable
         class="max-w-lg"
         @close="closeEditModal"
@@ -472,7 +472,7 @@ new class extends Component {
 
     <flux:modal
         name="delete-tournament-user-modal"
-        :show="$showDeleteModal"
+        wire:model.self="showDeleteModal"
         focusable
         class="max-w-lg"
         @close="closeDeleteModal"

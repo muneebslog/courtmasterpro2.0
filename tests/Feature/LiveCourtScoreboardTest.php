@@ -7,12 +7,12 @@ use App\Models\Stage;
 use App\Models\Tournament;
 use App\Models\User;
 
-test('welcome page shows hall screen links for courts 1 through 5', function (): void {
+test('welcome page shows hall screen links for courts 1 through 4', function (): void {
     $response = $this->get(route('home'));
 
     $response->assertOk();
 
-    foreach (range(1, 5) as $n) {
+    foreach (range(1, 4) as $n) {
         $response->assertSee('Screen '.$n, false);
         $response->assertSee(route('live.court', ['court' => $n]), false);
     }
@@ -122,7 +122,7 @@ test('live court score api prefers in-progress match over completed on same cour
         'best_of' => 1,
         'status' => 'completed',
         'winner_side' => 'a',
-        'court' => '5',
+        'court' => '4',
         'started_at' => now()->subHours(2),
         'ended_at' => now()->subHour(),
     ]);
@@ -135,11 +135,11 @@ test('live court score api prefers in-progress match over completed on same cour
         'best_of' => 1,
         'status' => 'in_progress',
         'winner_side' => null,
-        'court' => '5',
+        'court' => '4',
         'started_at' => now(),
     ]);
 
-    $this->getJson(route('api.live.court.score', ['court' => 5]))
+    $this->getJson(route('api.live.court.score', ['court' => 4]))
         ->assertOk()
         ->assertJsonPath('match.is_live', true)
         ->assertJsonPath('match.status', 'in_progress')
@@ -296,18 +296,19 @@ test('live court display page loads standalone scoreboard shell', function (): v
         ->assertSee('team2Flag', false);
 });
 
-test('live court route rejects court numbers outside 1 to 5', function (): void {
+test('live court route rejects court numbers outside 1 to 4', function (): void {
     $this->get(route('live.court', ['court' => 9]))->assertNotFound();
+    $this->get(route('live.court', ['court' => 5]))->assertNotFound();
     $this->getJson(route('api.live.court.score', ['court' => 0]))->assertNotFound();
 });
 
-test('live all page embeds court iframes for courts 1 through 5', function (): void {
+test('live all page embeds court iframes for courts 1 through 4', function (): void {
     $response = $this->get(route('live.all'));
 
     $response->assertOk()
         ->assertSee('<iframe', false);
 
-    foreach (range(1, 5) as $n) {
+    foreach (range(1, 4) as $n) {
         $response->assertSee(route('live.court', ['court' => $n]), false);
     }
 });

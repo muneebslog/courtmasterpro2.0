@@ -15,7 +15,7 @@ class SitemapController extends Controller
             ['path' => route('live.all'), 'changefreq' => 'hourly', 'priority' => 0.6],
         ];
 
-        foreach (range(1, 5) as $court) {
+        foreach (range(1, 4) as $court) {
             $paths[] = [
                 'path' => route('live.court', ['court' => $court]),
                 'changefreq' => 'hourly',

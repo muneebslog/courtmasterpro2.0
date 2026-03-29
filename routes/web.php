@@ -15,13 +15,13 @@ Route::view('/', 'welcome')->name('home');
 Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('sitemap.index');
 
 Route::get('live/court/{court}', [LiveScoreController::class, 'courtView'])
-    ->where('court', '[1-5]')
+    ->where('court', '[1-4]')
     ->name('live.court');
 Route::get('live/all', [LiveScoreController::class, 'allView'])->name('live.all');
 
 Route::get('api/live/court/{court}', [LiveScoreController::class, 'courtScore'])
     ->middleware('throttle:live-court-score')
-    ->where('court', '[1-5]')
+    ->where('court', '[1-4]')
     ->name('api.live.court.score');
 
 Route::livewire('viewer/tournaments', 'pages::viewer.tournaments')->name('viewer.tournaments.index');

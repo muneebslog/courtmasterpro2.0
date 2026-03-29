@@ -16,12 +16,12 @@ class LiveScoreController extends Controller
 
     public function allView(): View
     {
-        return view('live.all', ['courts' => range(1, 5)]);
+        return view('live.all', ['courts' => range(1, 4)]);
     }
 
     /**
      * Live match on this court, or the most recently finished match until the next one is started.
-     * Court field must match control panel, e.g. "1".."5".
+     * Court field must match control panel, e.g. "1".."4".
      */
     public function courtScore(string $court): JsonResponse
     {

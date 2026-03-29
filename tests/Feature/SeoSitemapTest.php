@@ -17,7 +17,7 @@ test('sitemap.xml lists public score pages', function (): void {
         ->assertSee(url(route('home')), false)
         ->assertSee(url(route('live.all')), false);
 
-    foreach (range(1, 5) as $court) {
+    foreach (range(1, 4) as $court) {
         $response->assertSee(url(route('live.court', ['court' => $court])), false);
     }
 });

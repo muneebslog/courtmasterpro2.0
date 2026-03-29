@@ -697,35 +697,6 @@
             color: #fff;
         }
 
-        .fullscreen-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            background: #ff1744;
-            border: 3px solid #fff;
-            color: #fff;
-            font-size: 28px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 99999;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
-            transition: transform 0.2s ease, background 0.2s ease;
-        }
-
-        .fullscreen-btn:hover {
-            transform: scale(1.15);
-            background: #d50000;
-        }
-
-        .fullscreen-btn:active {
-            transform: scale(0.95);
-        }
     </style>
 </head>
 
@@ -799,8 +770,6 @@
                         </div>
                     </div>
                 </div>
-
-                <button id="fullscreenBtn" class="fullscreen-btn">⛶</button>
             </div>
         </div>
     </div>
@@ -1013,15 +982,6 @@
                     }
                 };
                 xhr.send(null);
-            }
-
-            // Optional: fullscreen support for the live hall screen.
-            var fullscreenBtn = document.getElementById('fullscreenBtn');
-            if (fullscreenBtn) {
-                fullscreenBtn.addEventListener('click', function () {
-                    var el = document.documentElement;
-                    if (el.requestFullscreen) el.requestFullscreen();
-                });
             }
 
             poll();
