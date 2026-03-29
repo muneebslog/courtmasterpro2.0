@@ -976,8 +976,8 @@
                 team1NameEl.textContent = nameA;
                 team2NameEl.textContent = nameB;
 
-                var subA = (m.subtitle_a && String(m.subtitle_a).length) ? m.subtitle_a : (m.stage_name || '');
-                var subB = (m.subtitle_b && String(m.subtitle_b).length) ? m.subtitle_b : (m.stage_name || '');
+                var subA = (m.subtitle_a && String(m.subtitle_a).length) ? m.subtitle_a : '';
+                var subB = (m.subtitle_b && String(m.subtitle_b).length) ? m.subtitle_b : '';
                 team1SubEl.textContent = subA;
                 team2SubEl.textContent = subB;
 

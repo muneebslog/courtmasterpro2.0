@@ -218,6 +218,8 @@ test('live court score api returns match and games for in-progress match on cour
         ->assertJsonPath('match.tournament_name', 'Hall Test Open')
         ->assertJsonPath('match.event_name', 'Men Singles')
         ->assertJsonPath('match.stage_name', 'Semi Final')
+        ->assertJsonPath('match.subtitle_a', '')
+        ->assertJsonPath('match.subtitle_b', '')
         ->assertJsonPath('match.games.0.game_number', 1)
         ->assertJsonPath('match.games.0.score_a', 21)
         ->assertJsonPath('match.games.0.score_b', 18)

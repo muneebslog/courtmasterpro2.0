@@ -40,12 +40,12 @@ class LiveScoreController extends Controller
         $isLive = $match->status === 'in_progress';
 
         $stageName = $match->stage?->name;
-        $subtitleA = $stageName;
-        $subtitleB = $stageName;
+        $subtitleA = null;
+        $subtitleB = null;
 
         if ($match->tie_id && $match->relationLoaded('tie') && $match->tie) {
-            $teamAName = (string) ($match->tie->teamA?->name ?? '');
-            $teamBName = (string) ($match->tie->teamB?->name ?? '');
+            $teamAName = trim((string) ($match->tie->teamA?->name ?? ''));
+            $teamBName = trim((string) ($match->tie->teamB?->name ?? ''));
             $playersA = $match->matchPlayers
                 ->where('side', 'a')
                 ->sortBy('position')
@@ -61,9 +61,14 @@ class LiveScoreController extends Controller
 
             if ($teamAName !== '' && $playersA !== '') {
                 $subtitleA = $teamAName.' — '.$playersA;
+            } elseif ($teamAName !== '') {
+                $subtitleA = $teamAName;
             }
+
             if ($teamBName !== '' && $playersB !== '') {
                 $subtitleB = $teamBName.' — '.$playersB;
+            } elseif ($teamBName !== '') {
+                $subtitleB = $teamBName;
             }
         }
 
@@ -71,8 +76,12 @@ class LiveScoreController extends Controller
 
         $labelA = PlayerNameFormatter::stripRegionalIndicatorFlags((string) $match->side_a_label);
         $labelB = PlayerNameFormatter::stripRegionalIndicatorFlags((string) $match->side_b_label);
-        $subA = PlayerNameFormatter::stripRegionalIndicatorFlags((string) ($subtitleA ?? ''));
-        $subB = PlayerNameFormatter::stripRegionalIndicatorFlags((string) ($subtitleB ?? ''));
+        $subA = $subtitleA !== null && $subtitleA !== ''
+            ? PlayerNameFormatter::stripRegionalIndicatorFlags((string) $subtitleA)
+            : '';
+        $subB = $subtitleB !== null && $subtitleB !== ''
+            ? PlayerNameFormatter::stripRegionalIndicatorFlags((string) $subtitleB)
+            : '';
 
         return response()->json([
             'court' => $court,
