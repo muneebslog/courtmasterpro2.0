@@ -749,42 +749,82 @@
 
         /* Android TV: apply the same overrides regardless of reported viewport width */
         .is-tv .footer-tournament {
-            font-size: clamp(22px, 3.2vmin, 48px);
+            /* Chrome 73 (Android TV) doesn't support clamp() */
+            font-size: 36px;
         }
 
         .is-tv .footer-event {
-            font-size: clamp(20px, 2.8vmin, 42px);
+            font-size: 32px;
         }
 
         .is-tv .footer-badge {
-            font-size: clamp(14px, 1.9vmin, 24px);
+            font-size: 18px;
         }
 
         .is-tv .team-flag-emoji {
-            font-size: clamp(44px, 6vmin, 88px);
+            font-size: 72px;
         }
 
         .is-tv .team-name {
-            font-size: clamp(28px, 4.2vmin, 96px);
+            font-size: 64px;
         }
 
         .is-tv .player-names {
-            font-size: clamp(16px, 2.2vmin, 36px);
+            font-size: 24px;
         }
 
         .is-tv .wins-indicator {
-            font-size: clamp(22px, 3.6vmin, 72px);
+            font-size: 56px;
             min-width: 88px;
         }
 
         .is-tv .round-score {
-            font-size: clamp(60px, 11vmin, 260px);
+            font-size: 140px;
             min-width: 130px;
         }
 
         .is-tv .current-score {
-            font-size: clamp(56px, 10vmin, 240px);
+            font-size: 128px;
             min-width: 140px;
+        }
+
+        /* If clamp() is supported, prefer responsive sizing */
+        @supports (font-size: clamp(1px, 2px, 3px)) {
+            .is-tv .footer-tournament {
+                font-size: clamp(22px, 3.2vmin, 48px);
+            }
+
+            .is-tv .footer-event {
+                font-size: clamp(20px, 2.8vmin, 42px);
+            }
+
+            .is-tv .footer-badge {
+                font-size: clamp(14px, 1.9vmin, 24px);
+            }
+
+            .is-tv .team-flag-emoji {
+                font-size: clamp(44px, 6vmin, 88px);
+            }
+
+            .is-tv .team-name {
+                font-size: clamp(28px, 4.2vmin, 96px);
+            }
+
+            .is-tv .player-names {
+                font-size: clamp(16px, 2.2vmin, 36px);
+            }
+
+            .is-tv .wins-indicator {
+                font-size: clamp(22px, 3.6vmin, 72px);
+            }
+
+            .is-tv .round-score {
+                font-size: clamp(60px, 11vmin, 260px);
+            }
+
+            .is-tv .current-score {
+                font-size: clamp(56px, 10vmin, 240px);
+            }
         }
 
         button {
