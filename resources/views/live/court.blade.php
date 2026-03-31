@@ -49,8 +49,9 @@
             font-size: 9px;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            color: #444;
+            color: rgba(255, 255, 255, 0.92);
             z-index: 2;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
         }
 
         #load-err {
@@ -342,8 +343,9 @@
             font-size: 9px;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            color: #444;
+            color: rgba(255, 255, 255, 0.92);
             z-index: 2;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
         }
 
         #load-err {
