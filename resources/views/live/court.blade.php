@@ -740,30 +740,48 @@
          * /live/all TV mode: each iframe is <900px wide, so media queries won't fire.
          * Use strong, always-on sizing when embed=1&tv=1.
          */
+        body.is-tv-embed .scoreboard-container {
+            padding: 0.5vh 0.6vw;
+            gap: 0.55vh;
+        }
+
+        body.is-tv-embed .scoreboard {
+            padding: 0.75vh;
+            gap: 0.75vh;
+        }
+
+        body.is-tv-embed .teams-container {
+            gap: 0.75vh;
+        }
+
+        body.is-tv-embed .team-row {
+            padding: 0 1.1vw;
+        }
+
         body.is-tv-embed .team-flag-emoji {
-            font-size: clamp(40px, 7vmin, 92px);
+            font-size: clamp(44px, 7.5vh, 104px);
         }
 
         body.is-tv-embed .team-name {
-            font-size: clamp(26px, 5vmin, 92px);
+            font-size: clamp(28px, 6vh, 104px);
         }
 
         body.is-tv-embed .player-names {
-            font-size: clamp(16px, 2.8vmin, 38px);
+            font-size: clamp(16px, 2.8vh, 44px);
         }
 
         body.is-tv-embed .wins-indicator {
-            font-size: clamp(22px, 4.2vmin, 80px);
+            font-size: clamp(24px, 5.5vh, 90px);
             min-width: 84px;
         }
 
         body.is-tv-embed .round-score {
-            font-size: clamp(72px, 13vmin, 280px);
+            font-size: clamp(76px, 15vh, 320px);
             min-width: 140px;
         }
 
         body.is-tv-embed .current-score {
-            font-size: clamp(68px, 12vmin, 260px);
+            font-size: clamp(72px, 14vh, 300px);
             min-width: 150px;
         }
 
