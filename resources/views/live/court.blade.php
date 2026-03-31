@@ -672,7 +672,7 @@
         .round-score {
             background: #790d0d;
             color: #fff;
-            border-radius: 0.85vh;
+            border-radius: 1.35vh;
             font-size: clamp(2rem, min(24vh, 17vw), 26vh);
             font-weight: 900;
             min-width: 6.5vw;
@@ -687,7 +687,7 @@
         .current-score {
             background: linear-gradient(135deg, #d50000 0%, #8b0000 100%);
             color: #fff;
-            border-radius: 0.85vh;
+            border-radius: 1.85vh;
             font-size: clamp(1.5rem, min(20vh, 15vw), 20vh);
             font-weight: 900;
             min-width: 8vw;
