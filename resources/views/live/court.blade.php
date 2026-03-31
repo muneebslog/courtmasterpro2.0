@@ -393,7 +393,7 @@
         }
 
         .footer-tournament {
-            font-size: clamp(calc(1.1rem * var(--hall-scale)), calc(2.6vh * var(--hall-scale)), calc(3.2vh * var(--hall-scale)));
+            font-size: clamp(1.1rem, 2.6vh, 3.2vh);
             font-weight: 900;
             color: #000;
             text-transform: uppercase;
@@ -414,7 +414,7 @@
         }
 
         .footer-event {
-            font-size: clamp(calc(1rem * var(--hall-scale)), calc(2.2vh * var(--hall-scale)), calc(2.8vh * var(--hall-scale)));
+            font-size: clamp(1rem, 2.2vh, 2.8vh);
             font-weight: 800;
             color: #111;
             text-transform: uppercase;
@@ -426,7 +426,7 @@
             display: inline-block;
             padding: 0.35vh 1.1vw;
             border-radius: 0.5vh;
-            font-size: clamp(calc(0.65rem * var(--hall-scale)), calc(1.35vh * var(--hall-scale)), calc(1.6vh * var(--hall-scale)));
+            font-size: clamp(0.65rem, 1.35vh, 1.6vh);
             font-weight: 900;
             letter-spacing: 0.18em;
             text-transform: uppercase;
@@ -498,7 +498,7 @@
             justify-content: center;
             width: 100%;
             height: 100%;
-            font-size: calc(6.5vh * var(--hall-scale));
+            font-size: 6.5vh;
             line-height: 1;
         }
 
@@ -524,7 +524,7 @@
 
         .team-name {
             color: #ffffff;
-            font-size: clamp(calc(1.25rem * var(--hall-scale)), calc(5vh * var(--hall-scale)), calc(8vh * var(--hall-scale)));
+            font-size: clamp(1.25rem, 5vh, 8vh);
             font-weight: 900;
             letter-spacing: 0.2vw;
             text-transform: uppercase;
@@ -648,7 +648,7 @@
             background: #790d0d;
             color: #fff;
             border-radius: 0.85vh;
-            font-size: clamp(calc(2rem * var(--hall-scale)), calc(min(24vh, 17vw) * var(--hall-scale)), calc(26vh * var(--hall-scale)));
+            font-size: clamp(2rem, min(24vh, 17vw), 26vh);
             font-weight: 900;
             min-width: 6.5vw;
             text-align: center;
@@ -663,7 +663,7 @@
             background: linear-gradient(135deg, #d50000 0%, #8b0000 100%);
             color: #fff;
             border-radius: 0.85vh;
-            font-size: clamp(calc(1.5rem * var(--hall-scale)), calc(min(20vh, 15vw) * var(--hall-scale)), calc(20vh * var(--hall-scale)));
+            font-size: clamp(1.5rem, min(20vh, 15vw), 20vh);
             font-weight: 900;
             min-width: 8vw;
             text-align: center;
@@ -679,13 +679,55 @@
             color: #000;
             padding: 0.55vh 0.7vw;
             border-radius: 0.85vh;
-            font-size: clamp(calc(1rem * var(--hall-scale)), calc(min(5vh, 6vw) * var(--hall-scale)), calc(7.5vh * var(--hall-scale)));
+            font-size: clamp(1rem, min(5vh, 6vw), 7.5vh);
             font-weight: 900;
             min-width: 5.5vw;
             text-align: center;
             border: 0.25vh solid #ffeb3b;
             box-shadow: 0 0.35vh 1.1vh rgba(255, 215, 0, 0.4);
             line-height: 1;
+        }
+
+        /* --- TV overrides (force large, simple values; avoid nested calc() inside clamp()) --- */
+        @media (min-width: 900px) {
+            .footer-tournament {
+                font-size: clamp(22px, 3.2vmin, 48px);
+            }
+
+            .footer-event {
+                font-size: clamp(20px, 2.8vmin, 42px);
+            }
+
+            .footer-badge {
+                font-size: clamp(14px, 1.9vmin, 24px);
+            }
+
+            .team-flag-emoji {
+                font-size: clamp(44px, 6vmin, 88px);
+            }
+
+            .team-name {
+                font-size: clamp(28px, 4.2vmin, 96px);
+            }
+
+            .player-names {
+                font-size: clamp(16px, 2.2vmin, 36px);
+            }
+
+            .wins-indicator {
+                font-size: clamp(22px, 3.6vmin, 72px);
+                min-width: 88px;
+            }
+
+            .round-score {
+                font-size: clamp(36px, 7vmin, 140px);
+                min-width: 110px;
+            }
+
+            .current-score {
+                font-size: clamp(34px, 6.2vmin, 128px);
+                min-width: 120px;
+            }
         }
 
         button {
