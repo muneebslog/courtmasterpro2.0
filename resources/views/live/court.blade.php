@@ -55,13 +55,20 @@
 
         #load-err {
             display: none;
-            width: 100%;
-            max-width: 900px;
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 99999;
             text-align: center;
-            font-size: 14px;
-            color: #e8192f;
-            padding: 8px;
-            margin-bottom: 8px;
+            font-size: 12px;
+            color: #fff;
+            background: rgba(232, 25, 47, 0.92);
+            border: 2px solid rgba(255, 255, 255, 0.85);
+            border-radius: 999px;
+            padding: 6px 12px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+            pointer-events: none;
         }
 
         .idle {
@@ -341,13 +348,25 @@
 
         #load-err {
             display: none;
-            width: 100%;
-            max-width: 900px;
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 99999;
             text-align: center;
-            font-size: 14px;
-            color: #e8192f;
-            padding: 8px;
-            margin-bottom: 8px;
+            font-size: 12px;
+            color: #fff;
+            background: rgba(232, 25, 47, 0.92);
+            border: 2px solid rgba(255, 255, 255, 0.85);
+            border-radius: 999px;
+            padding: 6px 12px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+            pointer-events: none;
+        }
+
+        /* Embedded in /live/all: don't show transient errors (keeps the grid stable). */
+        body.is-embedded #load-err {
+            display: none !important;
         }
 
         .idle {
@@ -1320,12 +1339,16 @@
                         try {
                             applyPayload(JSON.parse(xhr.responseText));
                         } catch (e) {
+                            if (!isEmbedded) {
+                                errEl.style.display = 'block';
+                                errEl.textContent = '{{ __('Unable to load') }}';
+                            }
+                        }
+                    } else {
+                        if (!isEmbedded) {
                             errEl.style.display = 'block';
                             errEl.textContent = '{{ __('Unable to load') }}';
                         }
-                    } else {
-                        errEl.style.display = 'block';
-                        errEl.textContent = '{{ __('Unable to load') }}';
                     }
 
                     schedulePoll();
