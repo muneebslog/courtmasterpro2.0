@@ -502,7 +502,7 @@
             gap: 0.35vh;
             justify-content: center;
         }
-        
+
 
         .team-name {
             color: #ffffff;
@@ -847,6 +847,9 @@
         (function () {
             var POLL_MS = 500;
             var POLL_URL = {!! json_encode(route('api.live.court.score', ['court' => $court]), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) !!};
+            var IDLE_GRACE_MS = 15000;
+
+            var lastMatchSeenAtMs = null;
 
             var idleEl = document.getElementById('idle');
             var boardEl = document.getElementById('board');
@@ -928,6 +931,9 @@
                 errEl.textContent = '';
 
                 if (!data || !data.match) {
+                    if (lastMatchSeenAtMs !== null && (Date.now() - lastMatchSeenAtMs) < IDLE_GRACE_MS) {
+                        return;
+                    }
                     idleEl.style.display = 'block';
                     boardEl.className = 'board';
                     if (bannerTournamentEl) {
@@ -944,6 +950,7 @@
                 }
 
                 var m = data.match;
+                lastMatchSeenAtMs = Date.now();
                 idleEl.style.display = 'none';
                 boardEl.className = 'board is-on';
 
@@ -1036,7 +1043,9 @@
 
             function poll() {
                 var xhr = new XMLHttpRequest();
-                xhr.open('GET', POLL_URL, true);
+                var url = POLL_URL;
+                url += (url.indexOf('?') === -1 ? '?' : '&') + 'ts=' + Date.now();
+                xhr.open('GET', url, true);
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState !== 4) {
                         return;
