@@ -924,7 +924,6 @@
 <body>
     <div class="court-tag">{{ __('Court') }} {{ $court }}</div>
     <div id="load-err"></div>
-    <div id="tv-debug" style="display:none;position:fixed;top:6px;right:6px;z-index:999999;background:rgba(0,0,0,.75);color:#fff;font:12px/1.3 monospace;padding:6px 8px;max-width:70vw;white-space:pre-wrap;border-radius:6px;"></div>
 
     <div id="idle" class="idle">{{ __('No current match') }}</div>
 
@@ -1023,19 +1022,6 @@
 
                 if (forceTv || (isAndroid && isTvHint)) {
                     document.documentElement.classList.add('is-tv');
-                }
-
-                if (params.get('debug') === '1') {
-                    var dbg = document.getElementById('tv-debug');
-                    if (dbg) {
-                        dbg.style.display = 'block';
-                        dbg.textContent =
-                            'is-tv=' + document.documentElement.classList.contains('is-tv') + '\n' +
-                            'inner=' + window.innerWidth + 'x' + window.innerHeight + '\n' +
-                            'screen=' + (window.screen ? (window.screen.width + 'x' + window.screen.height) : 'n/a') + '\n' +
-                            'dpr=' + (window.devicePixelRatio || 'n/a') + '\n' +
-                            'ua=' + ua;
-                    }
                 }
             } catch (e) {
                 // ignore

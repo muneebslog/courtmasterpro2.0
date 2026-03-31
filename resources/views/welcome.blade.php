@@ -107,15 +107,9 @@
             <a href="{{ route('live.all', ['tv' => '1']) }}" class="wm-screen-link wm-screen-link--all">
                 TV: {{ __('All screens') }}
             </a>
-            <a href="{{ route('live.all', ['tv' => '1', 'debug' => '1']) }}" class="wm-screen-link wm-screen-link--all">
-                TV Debug: {{ __('All screens') }}
-            </a>
             @foreach (range(1, 4) as $screen)
                 <a href="{{ route('live.court', ['court' => $screen, 'tv' => '1']) }}" class="wm-screen-link">
                     TV Screen {{ $screen }}
-                </a>
-                <a href="{{ route('live.court', ['court' => $screen, 'tv' => '1', 'debug' => '1']) }}" class="wm-screen-link">
-                    TV Debug {{ $screen }}
                 </a>
             @endforeach
         </div>
