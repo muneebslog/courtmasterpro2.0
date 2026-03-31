@@ -390,6 +390,16 @@
             box-sizing: border-box;
         }
 
+        /* Embedded in /live/all: remove header to reclaim space */
+        body.is-embedded .footer {
+            display: none;
+        }
+
+        body.is-embedded .scoreboard-container {
+            padding: 0.75vh 0.75vw;
+            gap: 0.75vh;
+        }
+
         .footer {
             background: #fff;
             border: 0.35vh solid #000;
