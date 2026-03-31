@@ -90,6 +90,126 @@ test('live court score api returns last completed match on court until next matc
         ->assertJsonPath('match.games.0.score_b', 17);
 });
 
+test('live court score api returns last retired match on court until next match starts', function (): void {
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    $tournament = Tournament::create([
+        'tournament_name' => 'Hold Result Open',
+        'location' => 'Hall',
+        'start_date' => now()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'status' => 'published',
+        'admin_id' => $admin->id,
+    ]);
+
+    $event = Event::factory()->create([
+        'tournament_id' => $tournament->id,
+        'event_name' => 'Women Doubles',
+        'event_type' => Event::EVENT_TYPE_DOUBLES,
+    ]);
+
+    $stage = Stage::create([
+        'event_id' => $event->id,
+        'name' => 'Final',
+        'best_of' => 1,
+        'order_index' => 1,
+        'status' => 'active',
+    ]);
+
+    $match = MatchModel::create([
+        'stage_id' => $stage->id,
+        'tie_id' => null,
+        'side_a_label' => 'Winner Side',
+        'side_b_label' => 'Runner Up',
+        'best_of' => 1,
+        'status' => 'retired',
+        'winner_side' => 'a',
+        'court' => '4',
+        'started_at' => now()->subHour(),
+        'ended_at' => now()->subMinutes(5),
+    ]);
+
+    Game::create([
+        'match_id' => $match->id,
+        'game_number' => 1,
+        'score_a' => 21,
+        'score_b' => 17,
+        'winner_side' => 'a',
+    ]);
+
+    $response = $this->getJson(route('api.live.court.score', ['court' => 4]));
+
+    $response->assertOk()
+        ->assertJsonPath('court', '4')
+        ->assertJsonPath('match.is_live', false)
+        ->assertJsonPath('match.status', 'retired')
+        ->assertJsonPath('match.winner_side', 'a')
+        ->assertJsonPath('match.games.0.score_a', 21)
+        ->assertJsonPath('match.games.0.score_b', 17);
+});
+
+test('live court score api returns last not_required match on court until next match starts', function (): void {
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    $tournament = Tournament::create([
+        'tournament_name' => 'Hold Result Open',
+        'location' => 'Hall',
+        'start_date' => now()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'status' => 'published',
+        'admin_id' => $admin->id,
+    ]);
+
+    $event = Event::factory()->create([
+        'tournament_id' => $tournament->id,
+        'event_name' => 'Women Doubles',
+        'event_type' => Event::EVENT_TYPE_DOUBLES,
+    ]);
+
+    $stage = Stage::create([
+        'event_id' => $event->id,
+        'name' => 'Final',
+        'best_of' => 1,
+        'order_index' => 1,
+        'status' => 'active',
+    ]);
+
+    $match = MatchModel::create([
+        'stage_id' => $stage->id,
+        'tie_id' => null,
+        'side_a_label' => 'Winner Side',
+        'side_b_label' => 'Runner Up',
+        'best_of' => 1,
+        'status' => 'not_required',
+        'winner_side' => 'a',
+        'court' => '4',
+        'started_at' => now()->subHour(),
+        'ended_at' => now()->subMinutes(5),
+    ]);
+
+    Game::create([
+        'match_id' => $match->id,
+        'game_number' => 1,
+        'score_a' => 0,
+        'score_b' => 0,
+        'winner_side' => null,
+    ]);
+
+    $response = $this->getJson(route('api.live.court.score', ['court' => 4]));
+
+    $response->assertOk()
+        ->assertJsonPath('court', '4')
+        ->assertJsonPath('match.is_live', false)
+        ->assertJsonPath('match.status', 'not_required')
+        ->assertJsonPath('match.winner_side', 'a')
+        ->assertJsonPath('match.games.0.score_a', 0)
+        ->assertJsonPath('match.games.0.score_b', 0);
+});
+
 test('live court score api prefers in-progress match over completed on same court', function (): void {
     $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
 

@@ -110,7 +110,8 @@ class LiveScoreController extends Controller
     }
 
     /**
-     * Prefer the in-progress match; otherwise the latest completed or walkover match still assigned to this court.
+     * Prefer the in-progress match; otherwise fall back to the latest terminal match
+     * still assigned to this court until the next one is started.
      */
     private function resolveCourtScoreboardMatch(string $court): ?MatchModel
     {
@@ -136,7 +137,7 @@ class LiveScoreController extends Controller
 
         return MatchModel::query()
             ->where('court', $court)
-            ->whereIn('status', ['completed', 'walkover'])
+            ->whereIn('status', ['completed', 'walkover', 'retired', 'not_required'])
             ->with($with)
             ->orderByDesc('ended_at')
             ->orderByDesc('started_at')
