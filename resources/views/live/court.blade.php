@@ -1169,6 +1169,7 @@
             var idleEl = document.getElementById('idle');
             var boardEl = document.getElementById('board');
             var errEl = document.getElementById('load-err');
+            var errHideTimer = null;
 
             var bannerTournamentEl = document.getElementById('banner-tournament');
             var bannerEventEl = document.getElementById('banner-event');
@@ -1407,6 +1408,26 @@
 
             var pollInFlight = false;
 
+            function showError(message) {
+                if (isEmbedded) {
+                    return;
+                }
+
+                if (errHideTimer !== null) {
+                    window.clearTimeout(errHideTimer);
+                    errHideTimer = null;
+                }
+
+                errEl.style.display = 'block';
+                errEl.textContent = message;
+
+                errHideTimer = window.setTimeout(function () {
+                    errEl.style.display = 'none';
+                    errEl.textContent = '';
+                    errHideTimer = null;
+                }, 500);
+            }
+
             function schedulePoll() {
                 window.setTimeout(poll, POLL_MS);
             }
@@ -1436,16 +1457,10 @@
                         try {
                             applyPayload(JSON.parse(xhr.responseText));
                         } catch (e) {
-                            if (!isEmbedded) {
-                                errEl.style.display = 'block';
-                                errEl.textContent = '{{ __('Unable to load') }}';
-                            }
+                            showError('{{ __('Unable to load') }}');
                         }
                     } else {
-                        if (!isEmbedded) {
-                            errEl.style.display = 'block';
-                            errEl.textContent = '{{ __('Unable to load') }}';
-                        }
+                        showError('{{ __('Unable to load') }}');
                     }
 
                     schedulePoll();
