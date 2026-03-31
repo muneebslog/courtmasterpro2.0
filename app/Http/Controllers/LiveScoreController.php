@@ -34,7 +34,7 @@ class LiveScoreController extends Controller
             return response()->json([
                 'court' => $court,
                 'match' => null,
-            ]);
+            ])->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
         }
 
         $isLive = $match->status === 'in_progress';
@@ -106,7 +106,7 @@ class LiveScoreController extends Controller
                     'winner_side' => $game->winner_side,
                 ])->values()->all(),
             ],
-        ]);
+        ])->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }
 
     /**
