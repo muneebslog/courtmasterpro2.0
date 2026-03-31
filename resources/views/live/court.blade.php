@@ -747,6 +747,46 @@
             }
         }
 
+        /* Android TV: apply the same overrides regardless of reported viewport width */
+        .is-tv .footer-tournament {
+            font-size: clamp(22px, 3.2vmin, 48px);
+        }
+
+        .is-tv .footer-event {
+            font-size: clamp(20px, 2.8vmin, 42px);
+        }
+
+        .is-tv .footer-badge {
+            font-size: clamp(14px, 1.9vmin, 24px);
+        }
+
+        .is-tv .team-flag-emoji {
+            font-size: clamp(44px, 6vmin, 88px);
+        }
+
+        .is-tv .team-name {
+            font-size: clamp(28px, 4.2vmin, 96px);
+        }
+
+        .is-tv .player-names {
+            font-size: clamp(16px, 2.2vmin, 36px);
+        }
+
+        .is-tv .wins-indicator {
+            font-size: clamp(22px, 3.6vmin, 72px);
+            min-width: 88px;
+        }
+
+        .is-tv .round-score {
+            font-size: clamp(60px, 11vmin, 260px);
+            min-width: 130px;
+        }
+
+        .is-tv .current-score {
+            font-size: clamp(56px, 10vmin, 240px);
+            min-width: 140px;
+        }
+
         button {
             background: rgba(213, 0, 0, 0.6);
             border: 0.3vh solid #ff1744;
@@ -922,6 +962,17 @@
 
     <script>
         (function () {
+            try {
+                var ua = navigator.userAgent || '';
+                var isAndroid = /\bAndroid\b/i.test(ua);
+                var isTvHint = /\bTV\b/i.test(ua) || /\bBRAVIA\b/i.test(ua) || /\bAFT\b/i.test(ua) || /\bSmartTV\b/i.test(ua);
+                if (isAndroid && isTvHint) {
+                    document.documentElement.classList.add('is-tv');
+                }
+            } catch (e) {
+                // ignore
+            }
+
             // Android TV Chrome has low memory; polling too fast and re-rendering DOM can cause it
             // to discard page content. Keep polling responsive but not aggressive.
             var POLL_MS = 1500;
