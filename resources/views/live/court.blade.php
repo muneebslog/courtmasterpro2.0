@@ -1096,15 +1096,33 @@
                 // Do not parse the whole board every poll; it is expensive and can leak memory on TV browsers.
             }
 
+            var pollInFlight = false;
+
+            function schedulePoll() {
+                window.setTimeout(poll, POLL_MS);
+            }
+
             function poll() {
+                if (pollInFlight) {
+                    schedulePoll();
+                    return;
+                }
+
+                pollInFlight = true;
+
                 var xhr = new XMLHttpRequest();
                 var url = POLL_URL;
                 url += (url.indexOf('?') === -1 ? '?' : '&') + 'ts=' + Date.now();
                 xhr.open('GET', url, true);
+                xhr.timeout = 2500;
+
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState !== 4) {
                         return;
                     }
+
+                    pollInFlight = false;
+
                     if (xhr.status >= 200 && xhr.status < 300) {
                         try {
                             applyPayload(JSON.parse(xhr.responseText));
@@ -1116,12 +1134,24 @@
                         errEl.style.display = 'block';
                         errEl.textContent = '{{ __('Unable to load') }}';
                     }
+
+                    schedulePoll();
                 };
+
+                xhr.ontimeout = function () {
+                    pollInFlight = false;
+                    schedulePoll();
+                };
+
+                xhr.onerror = function () {
+                    pollInFlight = false;
+                    schedulePoll();
+                };
+
                 xhr.send(null);
             }
 
             poll();
-            setInterval(poll, POLL_MS);
 
             @if ($showFullscreenButton)
             var fsBtn = document.getElementById('fullscreenBtn');
