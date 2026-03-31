@@ -1,6 +1,7 @@
 @php
     $title = __('All courts — Live') . ' — ' . config('app.name');
     $canonicalUrl = url()->current();
+    $tvMode = request()->boolean('tv');
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -52,6 +53,38 @@
             background: #000;
         }
 
+        .tv-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 99999;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 16px;
+            border-radius: 999px;
+            background: #1a1a1a;
+            border: 3px solid #fff;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 800;
+            font-family: 'Arial Black', Arial, sans-serif;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-decoration: none;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .tv-btn:hover {
+            transform: scale(1.05);
+            background: #2a2a2a;
+        }
+
+        .tv-btn:active {
+            transform: scale(0.98);
+        }
+
         .fullscreen-btn {
             position: fixed;
             bottom: 20px;
@@ -85,13 +118,19 @@
     </style>
 </head>
 <body>
+    <a
+        class="tv-btn"
+        href="{{ $tvMode ? route('live.all') : route('live.all', ['tv' => '1']) }}"
+    >
+        {{ $tvMode ? __('TV off') : __('TV mode') }}
+    </a>
     <button type="button" id="fullscreenBtn" class="fullscreen-btn" aria-label="{{ __('Full screen') }}">⛶</button>
 
     <div class="courts-grid" role="application" aria-label="All courts live scoreboard">
         @foreach ($courts as $court)
             <iframe
                 title="{{ __('Court') }} {{ $court }}"
-                src="{{ route('live.court', ['court' => $court, 'embed' => '1', 'tv' => request()->query('tv')]) }}"
+                src="{{ route('live.court', ['court' => $court, 'embed' => '1', 'tv' => $tvMode ? '1' : null]) }}"
                 loading="eager"
                 referrerpolicy="no-referrer"
             ></iframe>
