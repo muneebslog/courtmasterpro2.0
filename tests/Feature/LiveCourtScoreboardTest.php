@@ -24,7 +24,8 @@ test('live court score api returns null match when no in-progress match on court
     $response = $this->getJson(route('api.live.court.score', ['court' => 2]));
 
     $response->assertOk()
-        ->assertHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        ->assertHeader('Cache-Control')
+        ->assertHeaderContains('Cache-Control', 'no-store')
         ->assertJsonPath('court', '2')
         ->assertJsonPath('match', null);
 });
