@@ -298,10 +298,16 @@
             --hall-scale: 1;
         }
 
-        /* TVs often render CSS px smaller at distance; scale up only on large viewports. */
-        @media (min-width: 1200px) and (min-height: 700px) {
+        /* TVs often report odd viewport heights; key off width. */
+        @media (min-width: 900px) {
             :root {
-                --hall-scale: 1.35;
+                --hall-scale: 1.6;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            :root {
+                --hall-scale: 1.9;
             }
         }
 
