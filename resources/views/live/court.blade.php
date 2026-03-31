@@ -304,6 +304,7 @@
 
         :root {
             --hall-scale: 1;
+            --ui-scale: 1;
         }
 
         /* TVs often report odd viewport heights; key off width. */
@@ -441,6 +442,7 @@
         }
 
         .footer-tournament {
+            font-size: 3.2vh; /* fallback for Chrome 73 (no clamp()) */
             font-size: clamp(1.1rem, 2.6vh, 3.2vh);
             font-weight: 900;
             color: #000;
@@ -462,6 +464,7 @@
         }
 
         .footer-event {
+            font-size: 2.8vh; /* fallback for Chrome 73 (no clamp()) */
             font-size: clamp(1rem, 2.2vh, 2.8vh);
             font-weight: 800;
             color: #111;
@@ -474,6 +477,7 @@
             display: inline-block;
             padding: 0.35vh 1.1vw;
             border-radius: 0.5vh;
+            font-size: 1.6vh; /* fallback for Chrome 73 (no clamp()) */
             font-size: clamp(0.65rem, 1.35vh, 1.6vh);
             font-weight: 900;
             letter-spacing: 0.18em;
@@ -696,6 +700,7 @@
             background: #790d0d;
             color: #fff;
             border-radius: 1.35vh;
+            font-size: 18vh; /* fallback for Chrome 73 (no clamp()) */
             font-size: clamp(2rem, min(24vh, 17vw), 26vh);
             font-weight: 900;
             min-width: 6.5vw;
@@ -711,6 +716,7 @@
             background: linear-gradient(135deg, #d50000 0%, #8b0000 100%);
             color: #fff;
             border-radius: 1.85vh;
+            font-size: 16vh; /* fallback for Chrome 73 (no clamp()) */
             font-size: clamp(1.5rem, min(20vh, 15vw), 20vh);
             font-weight: 900;
             min-width: 8vw;
@@ -727,6 +733,7 @@
             color: #000;
             padding: 0.55vh 0.7vw;
             border-radius: 0.85vh;
+            font-size: 6vh; /* fallback for Chrome 73 (no clamp()) */
             font-size: clamp(1rem, min(5vh, 6vw), 7.5vh);
             font-weight: 900;
             min-width: 5.5vw;
@@ -759,29 +766,29 @@
         }
 
         body.is-tv-embed .team-flag-emoji {
-            font-size: clamp(44px, 7.5vh, 104px);
+            font-size: 7.5vh; /* fallback (Chrome 73: no clamp()) */
         }
 
         body.is-tv-embed .team-name {
-            font-size: clamp(28px, 6vh, 104px);
+            font-size: 6vh; /* fallback (Chrome 73: no clamp()) */
         }
 
         body.is-tv-embed .player-names {
-            font-size: clamp(16px, 2.8vh, 44px);
+            font-size: 2.8vh; /* fallback (Chrome 73: no clamp()) */
         }
 
         body.is-tv-embed .wins-indicator {
-            font-size: clamp(24px, 5.5vh, 90px);
+            font-size: 5.5vh; /* fallback (Chrome 73: no clamp()) */
             min-width: 84px;
         }
 
         body.is-tv-embed .round-score {
-            font-size: clamp(76px, 15vh, 320px);
+            font-size: 15vh; /* fallback (Chrome 73: no clamp()) */
             min-width: 140px;
         }
 
         body.is-tv-embed .current-score {
-            font-size: clamp(72px, 14vh, 300px);
+            font-size: 14vh; /* fallback (Chrome 73: no clamp()) */
             min-width: 150px;
         }
 
@@ -838,42 +845,41 @@
 
         /* Android TV: apply the same overrides regardless of reported viewport width */
         .is-tv body:not(.is-embedded) .footer-tournament {
-            /* Chrome 73 (Android TV) doesn't support clamp() */
-            font-size: 36px;
+            font-size: calc(30px * var(--ui-scale));
         }
 
         .is-tv body:not(.is-embedded) .footer-event {
-            font-size: 32px;
+            font-size: calc(26px * var(--ui-scale));
         }
 
         .is-tv body:not(.is-embedded) .footer-badge {
-            font-size: 18px;
+            font-size: calc(14px * var(--ui-scale));
         }
 
         .is-tv body:not(.is-embedded) .team-flag-emoji {
-            font-size: 72px;
+            font-size: calc(56px * var(--ui-scale));
         }
 
         .is-tv body:not(.is-embedded) .team-name {
-            font-size: 64px;
+            font-size: calc(48px * var(--ui-scale));
         }
 
         .is-tv body:not(.is-embedded) .player-names {
-            font-size: 24px;
+            font-size: calc(18px * var(--ui-scale));
         }
 
         .is-tv body:not(.is-embedded) .wins-indicator {
-            font-size: 56px;
+            font-size: calc(44px * var(--ui-scale));
             min-width: 88px;
         }
 
         .is-tv body:not(.is-embedded) .round-score {
-            font-size: 140px;
+            font-size: calc(108px * var(--ui-scale));
             min-width: 130px;
         }
 
         .is-tv body:not(.is-embedded) .current-score {
-            font-size: 128px;
+            font-size: calc(96px * var(--ui-scale));
             min-width: 140px;
         }
 
@@ -1116,6 +1122,23 @@
             } catch (e) {
                 // ignore
             }
+
+            function updateUiScale() {
+                // Tune to the provided Smart TV specs (inner=1280x624, dpr=1).
+                // We use inner sizes because TVs often report browser chrome/overscan differently.
+                var w = window.innerWidth || 1280;
+                var h = window.innerHeight || 624;
+                var scaleW = w / 1280;
+                var scaleH = h / 624;
+                var s = Math.min(scaleW, scaleH);
+                // Keep within a sane range so kiosks don’t become unreadable.
+                if (s < 0.75) s = 0.75;
+                if (s > 1.15) s = 1.15;
+                document.documentElement.style.setProperty('--ui-scale', String(s));
+            }
+
+            updateUiScale();
+            window.addEventListener('resize', updateUiScale);
 
             // Android TV Chrome has low memory; polling too fast and re-rendering DOM can cause it
             // to discard page content. Keep polling responsive but not aggressive.
