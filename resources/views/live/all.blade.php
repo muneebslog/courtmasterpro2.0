@@ -91,7 +91,7 @@
         @foreach ($courts as $court)
             <iframe
                 title="{{ __('Court') }} {{ $court }}"
-                src="{{ route('live.court', ['court' => $court, 'embed' => '1']) }}"
+                src="{{ route('live.court', ['court' => $court, 'embed' => '1', 'tv' => request()->query('tv')]) }}"
                 loading="eager"
                 referrerpolicy="no-referrer"
             ></iframe>

@@ -495,3 +495,14 @@ test('live all page embeds court iframes for courts 1 through 4', function (): v
         $response->assertSee(route('live.court', ['court' => $n, 'embed' => '1']), false);
     }
 });
+
+test('live all page passes tv query to embedded court iframes', function (): void {
+    $response = $this->get(route('live.all', ['tv' => '1']));
+
+    $response->assertOk();
+
+    foreach (range(1, 4) as $n) {
+        $url = str_replace('&', '&amp;', route('live.court', ['court' => $n, 'embed' => '1', 'tv' => '1']));
+        $response->assertSee($url, false);
+    }
+});
