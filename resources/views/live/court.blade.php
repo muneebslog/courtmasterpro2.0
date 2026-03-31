@@ -788,19 +788,22 @@
         body.is-tv-embed .wins-indicator {
             font-size: 4.8vh; /* tighter for /live/all tiles */
             min-width: 5.2vw;
-            padding: 0.45vh 0.55vw;
+            min-height: 7.6vh;
+            padding: 0.85vh 0.55vw;
         }
 
         body.is-tv-embed .round-score {
             font-size: 11.5vh; /* tighter for /live/all tiles */
             min-width: 6.2vw;
-            padding: 0.04em 0.1em;
+            min-height: 12.2vh;
+            padding: 0.08em 0.12em;
         }
 
         body.is-tv-embed .current-score {
             font-size: 10.8vh; /* tighter for /live/all tiles */
             min-width: 7vw;
-            padding: 0.04em 0.1em;
+            min-height: 12.2vh;
+            padding: 0.08em 0.12em;
         }
 
         /* --- TV overrides (force large, simple values; avoid nested calc() inside clamp()) --- */
