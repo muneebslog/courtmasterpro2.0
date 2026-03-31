@@ -311,6 +311,43 @@
             }
         }
 
+        /*
+         * Android TV Chrome sometimes renders the entire page "zoomed out" (fonts look tiny even with large vh/vw).
+         * Force-scale the whole scoreboard region on TV viewports.
+         */
+        @media (min-width: 900px) {
+            .scoreboard-container {
+                zoom: 1.6;
+            }
+
+            /* Fallback if zoom isn't honored */
+            @supports not (zoom: 1) {
+                .scoreboard-container {
+                    zoom: 1;
+                    transform: scale(1.6);
+                    transform-origin: top left;
+                    width: calc(100vw / 1.6);
+                    height: calc(100vh / 1.6);
+                }
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .scoreboard-container {
+                zoom: 1.85;
+            }
+
+            @supports not (zoom: 1) {
+                .scoreboard-container {
+                    zoom: 1;
+                    transform: scale(1.85);
+                    transform-origin: top left;
+                    width: calc(100vw / 1.85);
+                    height: calc(100vh / 1.85);
+                }
+            }
+        }
+
         .court-tag {
             position: fixed;
             top: 6px;
