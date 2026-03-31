@@ -503,6 +503,7 @@
             justify-content: center;
         }
 
+        
 
         .team-name {
             color: #ffffff;
