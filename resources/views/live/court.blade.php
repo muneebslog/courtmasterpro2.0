@@ -46,10 +46,10 @@
             position: fixed;
             top: 6px;
             left: 8px;
-            font-size: 20px;
+            font-size: clamp(14px, 1.8vmin, 28px);
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            color: rgb(255, 255, 255);
+            color: rgba(255, 255, 255, 0.95);
             z-index: 2;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
         }
@@ -340,7 +340,7 @@
             position: fixed;
             top: 6px;
             left: 8px;
-            font-size: 9px;
+            font-size: clamp(14px, 1.8vmin, 28px);
             letter-spacing: 0.12em;
             text-transform: uppercase;
             color: rgba(255, 255, 255, 0.92);
