@@ -317,19 +317,19 @@
          */
         @media (min-width: 900px) {
             .scoreboard-container {
-                transform: scale(1.08);
+                transform: scale(1.04);
                 transform-origin: top left;
-                width: calc(100vw / 1.08);
-                height: calc(100vh / 1.08);
+                width: calc(100vw / 1.04);
+                height: calc(100vh / 1.04);
             }
         }
 
         @media (min-width: 1200px) {
             .scoreboard-container {
-                transform: scale(1.12);
+                transform: scale(1.06);
                 transform-origin: top left;
-                width: calc(100vw / 1.12);
-                height: calc(100vh / 1.12);
+                width: calc(100vw / 1.06);
+                height: calc(100vh / 1.06);
             }
         }
 
