@@ -11,9 +11,12 @@ class LiveScoreController extends Controller
 {
     public function courtView(string $court): View
     {
+        $isEmbedded = request()->boolean('embed');
+
         return view('live.court', [
             'court' => $court,
-            'showFullscreenButton' => ! request()->boolean('embed'),
+            'showFullscreenButton' => ! $isEmbedded,
+            'isEmbedded' => $isEmbedded,
         ]);
     }
 

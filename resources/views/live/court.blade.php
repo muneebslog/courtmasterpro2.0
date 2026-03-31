@@ -707,122 +707,122 @@
 
         /* --- TV overrides (force large, simple values; avoid nested calc() inside clamp()) --- */
         @media (min-width: 900px) {
-            .footer-tournament {
+            body:not(.is-embedded) .footer-tournament {
                 font-size: clamp(22px, 3.2vmin, 48px);
             }
 
-            .footer-event {
+            body:not(.is-embedded) .footer-event {
                 font-size: clamp(20px, 2.8vmin, 42px);
             }
 
-            .footer-badge {
+            body:not(.is-embedded) .footer-badge {
                 font-size: clamp(14px, 1.9vmin, 24px);
             }
 
-            .team-flag-emoji {
+            body:not(.is-embedded) .team-flag-emoji {
                 font-size: clamp(44px, 6vmin, 88px);
             }
 
-            .team-name {
+            body:not(.is-embedded) .team-name {
                 font-size: clamp(28px, 4.2vmin, 96px);
             }
 
-            .player-names {
+            body:not(.is-embedded) .player-names {
                 font-size: clamp(16px, 2.2vmin, 36px);
             }
 
-            .wins-indicator {
+            body:not(.is-embedded) .wins-indicator {
                 font-size: clamp(22px, 3.6vmin, 72px);
                 min-width: 88px;
             }
 
-            .round-score {
+            body:not(.is-embedded) .round-score {
                 font-size: clamp(60px, 11vmin, 260px);
                 min-width: 130px;
             }
 
-            .current-score {
+            body:not(.is-embedded) .current-score {
                 font-size: clamp(56px, 10vmin, 240px);
                 min-width: 140px;
             }
         }
 
         /* Android TV: apply the same overrides regardless of reported viewport width */
-        .is-tv .footer-tournament {
+        .is-tv body:not(.is-embedded) .footer-tournament {
             /* Chrome 73 (Android TV) doesn't support clamp() */
             font-size: 36px;
         }
 
-        .is-tv .footer-event {
+        .is-tv body:not(.is-embedded) .footer-event {
             font-size: 32px;
         }
 
-        .is-tv .footer-badge {
+        .is-tv body:not(.is-embedded) .footer-badge {
             font-size: 18px;
         }
 
-        .is-tv .team-flag-emoji {
+        .is-tv body:not(.is-embedded) .team-flag-emoji {
             font-size: 72px;
         }
 
-        .is-tv .team-name {
+        .is-tv body:not(.is-embedded) .team-name {
             font-size: 64px;
         }
 
-        .is-tv .player-names {
+        .is-tv body:not(.is-embedded) .player-names {
             font-size: 24px;
         }
 
-        .is-tv .wins-indicator {
+        .is-tv body:not(.is-embedded) .wins-indicator {
             font-size: 56px;
             min-width: 88px;
         }
 
-        .is-tv .round-score {
+        .is-tv body:not(.is-embedded) .round-score {
             font-size: 140px;
             min-width: 130px;
         }
 
-        .is-tv .current-score {
+        .is-tv body:not(.is-embedded) .current-score {
             font-size: 128px;
             min-width: 140px;
         }
 
         /* If clamp() is supported, prefer responsive sizing */
         @supports (font-size: clamp(1px, 2px, 3px)) {
-            .is-tv .footer-tournament {
+            .is-tv body:not(.is-embedded) .footer-tournament {
                 font-size: clamp(22px, 3.2vmin, 48px);
             }
 
-            .is-tv .footer-event {
+            .is-tv body:not(.is-embedded) .footer-event {
                 font-size: clamp(20px, 2.8vmin, 42px);
             }
 
-            .is-tv .footer-badge {
+            .is-tv body:not(.is-embedded) .footer-badge {
                 font-size: clamp(14px, 1.9vmin, 24px);
             }
 
-            .is-tv .team-flag-emoji {
+            .is-tv body:not(.is-embedded) .team-flag-emoji {
                 font-size: clamp(44px, 6vmin, 88px);
             }
 
-            .is-tv .team-name {
+            .is-tv body:not(.is-embedded) .team-name {
                 font-size: clamp(28px, 4.2vmin, 96px);
             }
 
-            .is-tv .player-names {
+            .is-tv body:not(.is-embedded) .player-names {
                 font-size: clamp(16px, 2.2vmin, 36px);
             }
 
-            .is-tv .wins-indicator {
+            .is-tv body:not(.is-embedded) .wins-indicator {
                 font-size: clamp(22px, 3.6vmin, 72px);
             }
 
-            .is-tv .round-score {
+            .is-tv body:not(.is-embedded) .round-score {
                 font-size: clamp(60px, 11vmin, 260px);
             }
 
-            .is-tv .current-score {
+            .is-tv body:not(.is-embedded) .current-score {
                 font-size: clamp(56px, 10vmin, 240px);
             }
         }
@@ -921,7 +921,7 @@
     </style>
 </head>
 
-<body>
+<body class="{{ ($isEmbedded ?? false) ? 'is-embedded' : '' }}">
     <div class="court-tag">{{ __('Court') }} {{ $court }}</div>
     <div id="load-err"></div>
 
@@ -1005,6 +1005,7 @@
             try {
                 var params = new URLSearchParams(window.location.search || '');
                 var forceTv = params.get('tv') === '1' || params.get('tv') === 'true';
+                var isEmbedded = params.get('embed') === '1' || params.get('embed') === 'true';
 
                 var ua = navigator.userAgent || '';
                 var isAndroid = /\bAndroid\b/i.test(ua);
@@ -1020,7 +1021,7 @@
                     /\bMiTV\b/i.test(ua) ||
                     /\bHbbTV\b/i.test(ua);
 
-                if (forceTv || (isAndroid && isTvHint)) {
+                if (!isEmbedded && (forceTv || (isAndroid && isTvHint))) {
                     document.documentElement.classList.add('is-tv');
                 }
             } catch (e) {
