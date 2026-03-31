@@ -315,24 +315,16 @@
          * Android TV Chrome sometimes renders the entire page "zoomed out" (fonts look tiny even with large vh/vw).
          * Force-scale the whole scoreboard region on TV viewports.
          */
-        /* TV overscan-safe: slightly shrink the whole layout to avoid cropping edges. */
+        /* TV overscan-safe: keep full width/height, add padding instead of scaling. */
         @media (min-width: 900px) {
             .scoreboard-container {
-                transform: scale(0.97);
-                transform-origin: top left;
-                width: calc(100vw / 0.97);
-                height: calc(100vh / 0.97);
-                padding: 1.5vh 2.25vw;
+                padding: 1.75vh 2.75vw;
             }
         }
 
         @media (min-width: 1200px) {
             .scoreboard-container {
-                transform: scale(0.95);
-                transform-origin: top left;
-                width: calc(100vw / 0.95);
-                height: calc(100vh / 0.95);
-                padding: 1.75vh 2.75vw;
+                padding: 2vh 3.25vw;
             }
         }
 
@@ -745,12 +737,12 @@
             }
 
             .round-score {
-                font-size: clamp(36px, 7vmin, 140px);
+                font-size: clamp(48px, 9vmin, 200px);
                 min-width: 110px;
             }
 
             .current-score {
-                font-size: clamp(34px, 6.2vmin, 128px);
+                font-size: clamp(44px, 8vmin, 180px);
                 min-width: 120px;
             }
         }
