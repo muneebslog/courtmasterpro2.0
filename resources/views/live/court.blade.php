@@ -765,6 +765,14 @@
             padding: 0 1.1vw;
         }
 
+        body.is-tv-embed .scores {
+            /* In the /live/all grid each iframe is narrow; allow the score group to shrink. */
+            flex-shrink: 1;
+            min-width: 0;
+            max-width: 46%;
+            gap: 0.6vw;
+        }
+
         body.is-tv-embed .team-flag-emoji {
             font-size: 7.5vh; /* fallback (Chrome 73: no clamp()) */
         }
@@ -778,18 +786,21 @@
         }
 
         body.is-tv-embed .wins-indicator {
-            font-size: 5.5vh; /* fallback (Chrome 73: no clamp()) */
-            min-width: 84px;
+            font-size: 4.8vh; /* tighter for /live/all tiles */
+            min-width: 5.2vw;
+            padding: 0.45vh 0.55vw;
         }
 
         body.is-tv-embed .round-score {
-            font-size: 15vh; /* fallback (Chrome 73: no clamp()) */
-            min-width: 140px;
+            font-size: 11.5vh; /* tighter for /live/all tiles */
+            min-width: 6.2vw;
+            padding: 0.04em 0.1em;
         }
 
         body.is-tv-embed .current-score {
-            font-size: 14vh; /* fallback (Chrome 73: no clamp()) */
-            min-width: 150px;
+            font-size: 10.8vh; /* tighter for /live/all tiles */
+            min-width: 7vw;
+            padding: 0.04em 0.1em;
         }
 
         /* --- TV overrides (force large, simple values; avoid nested calc() inside clamp()) --- */
