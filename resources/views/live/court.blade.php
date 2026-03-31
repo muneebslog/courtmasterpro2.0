@@ -317,34 +317,19 @@
          */
         @media (min-width: 900px) {
             .scoreboard-container {
-                zoom: 1.25;
-            }
-
-            /* Fallback if zoom isn't honored */
-            @supports not (zoom: 1) {
-                .scoreboard-container {
-                    zoom: 1;
-                    transform: scale(1.25);
-                    transform-origin: top left;
-                    width: calc(100vw / 1.25);
-                    height: calc(100vh / 1.25);
-                }
+                transform: scale(1.15);
+                transform-origin: top left;
+                width: calc(100vw / 1.15);
+                height: calc(100vh / 1.15);
             }
         }
 
         @media (min-width: 1200px) {
             .scoreboard-container {
-                zoom: 1.35;
-            }
-
-            @supports not (zoom: 1) {
-                .scoreboard-container {
-                    zoom: 1;
-                    transform: scale(1.35);
-                    transform-origin: top left;
-                    width: calc(100vw / 1.35);
-                    height: calc(100vh / 1.35);
-                }
+                transform: scale(1.2);
+                transform-origin: top left;
+                width: calc(100vw / 1.2);
+                height: calc(100vh / 1.2);
             }
         }
 
