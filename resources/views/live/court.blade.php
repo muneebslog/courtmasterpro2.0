@@ -317,33 +317,33 @@
          */
         @media (min-width: 900px) {
             .scoreboard-container {
-                zoom: 1.6;
+                zoom: 1.25;
             }
 
             /* Fallback if zoom isn't honored */
             @supports not (zoom: 1) {
                 .scoreboard-container {
                     zoom: 1;
-                    transform: scale(1.6);
+                    transform: scale(1.25);
                     transform-origin: top left;
-                    width: calc(100vw / 1.6);
-                    height: calc(100vh / 1.6);
+                    width: calc(100vw / 1.25);
+                    height: calc(100vh / 1.25);
                 }
             }
         }
 
         @media (min-width: 1200px) {
             .scoreboard-container {
-                zoom: 1.85;
+                zoom: 1.35;
             }
 
             @supports not (zoom: 1) {
                 .scoreboard-container {
                     zoom: 1;
-                    transform: scale(1.85);
+                    transform: scale(1.35);
                     transform-origin: top left;
-                    width: calc(100vw / 1.85);
-                    height: calc(100vh / 1.85);
+                    width: calc(100vw / 1.35);
+                    height: calc(100vh / 1.35);
                 }
             }
         }
