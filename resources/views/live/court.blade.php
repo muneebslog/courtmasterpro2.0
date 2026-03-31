@@ -737,13 +737,13 @@
             }
 
             .round-score {
-                font-size: clamp(48px, 9vmin, 200px);
-                min-width: 110px;
+                font-size: clamp(60px, 11vmin, 260px);
+                min-width: 130px;
             }
 
             .current-score {
-                font-size: clamp(44px, 8vmin, 180px);
-                min-width: 120px;
+                font-size: clamp(56px, 10vmin, 240px);
+                min-width: 140px;
             }
         }
 
