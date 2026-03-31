@@ -502,6 +502,7 @@
             gap: 0.35vh;
             justify-content: center;
         }
+        
 
         .team-name {
             color: #ffffff;
