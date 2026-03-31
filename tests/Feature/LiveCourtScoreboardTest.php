@@ -212,6 +212,51 @@ test('live court score api returns last not_required match on court until next m
         ->assertJsonPath('match.games.0.score_b', 0);
 });
 
+test('live court score api returns pending match on court when no in-progress match exists', function (): void {
+    $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+    $tournament = Tournament::create([
+        'tournament_name' => 'Pending Cup',
+        'location' => 'Hall',
+        'start_date' => now()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'status' => 'published',
+        'admin_id' => $admin->id,
+    ]);
+
+    $event = Event::factory()->create([
+        'tournament_id' => $tournament->id,
+        'event_name' => 'Singles',
+        'event_type' => Event::EVENT_TYPE_SINGLES,
+    ]);
+
+    $stage = Stage::create([
+        'event_id' => $event->id,
+        'name' => 'R1',
+        'best_of' => 1,
+        'order_index' => 1,
+        'status' => 'active',
+    ]);
+
+    MatchModel::create([
+        'stage_id' => $stage->id,
+        'tie_id' => null,
+        'side_a_label' => 'Pending A',
+        'side_b_label' => 'Pending B',
+        'best_of' => 1,
+        'status' => 'pending',
+        'winner_side' => null,
+        'court' => '2',
+    ]);
+
+    $this->getJson(route('api.live.court.score', ['court' => 2]))
+        ->assertOk()
+        ->assertJsonPath('match.status', 'pending')
+        ->assertJsonPath('match.is_live', false)
+        ->assertJsonPath('match.side_a_label', 'Pending A')
+        ->assertJsonPath('match.side_b_label', 'Pending B');
+});
+
 test('live court score api prefers in-progress match over completed on same court', function (): void {
     $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
 

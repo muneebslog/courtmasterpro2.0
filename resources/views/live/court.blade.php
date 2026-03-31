@@ -954,7 +954,10 @@
                     bannerEventEl.textContent = m.event_name || '{{ __('Match') }}';
                 }
                 if (bannerStatusEl) {
-                    if (m.is_live === false) {
+                    if (m.status === 'pending') {
+                        bannerStatusEl.textContent = '{{ __('Next') }}';
+                        bannerStatusEl.className = 'footer-badge';
+                    } else if (m.is_live === false) {
                         bannerStatusEl.textContent = '{{ __('Finished') }}';
                         bannerStatusEl.className = 'footer-badge is-finished';
                     } else {

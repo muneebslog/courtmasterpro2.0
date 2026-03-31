@@ -135,6 +135,17 @@ class LiveScoreController extends Controller
             return $live;
         }
 
+        $pending = MatchModel::query()
+            ->where('court', $court)
+            ->where('status', 'pending')
+            ->with($with)
+            ->orderByDesc('id')
+            ->first();
+
+        if ($pending !== null) {
+            return $pending;
+        }
+
         return MatchModel::query()
             ->where('court', $court)
             ->whereIn('status', ['completed', 'walkover', 'retired', 'not_required'])
