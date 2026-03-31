@@ -845,11 +845,17 @@
 
     <script>
         (function () {
-            var POLL_MS = 500;
+            // Android TV Chrome has low memory; polling too fast and re-rendering DOM can cause it
+            // to discard page content. Keep polling responsive but not aggressive.
+            var POLL_MS = 1500;
             var POLL_URL = {!! json_encode(route('api.live.court.score', ['court' => $court]), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) !!};
             var IDLE_GRACE_MS = 15000;
 
             var lastMatchSeenAtMs = null;
+            var hasEverShownMatch = false;
+            var lastSignature = null;
+            var lastFlagA = null;
+            var lastFlagB = null;
 
             var idleEl = document.getElementById('idle');
             var boardEl = document.getElementById('board');
@@ -870,6 +876,38 @@
             var team2ScoresEl = document.getElementById('team2Scores');
             var team1WinsEl = document.getElementById('team1Wins');
             var team2WinsEl = document.getElementById('team2Wins');
+
+            function buildSignature(m) {
+                var parts = [
+                    m.status,
+                    m.winner_side || '',
+                    m.best_of || '',
+                    m.side_a_label || '',
+                    m.side_b_label || '',
+                    m.side_a_flag || '',
+                    m.side_b_flag || '',
+                    m.subtitle_a || '',
+                    m.subtitle_b || '',
+                    m.tournament_name || '',
+                    m.event_name || '',
+                ];
+                var games = m.games || [];
+                for (var i = 0; i < games.length; i++) {
+                    var g = games[i] || {};
+                    parts.push(
+                        String(g.game_number || ''),
+                        String(g.score_a || 0),
+                        String(g.score_b || 0),
+                        String(g.winner_side || '')
+                    );
+                }
+                return parts.join('|');
+            }
+
+            function parseFlag(el) {
+                if (!el || !window.twemoji) return;
+                window.twemoji.parse(el, { folder: 'svg', ext: '.svg' });
+            }
 
             function clamp(n, min, max) {
                 if (n < min) return min;
@@ -931,6 +969,11 @@
                 errEl.textContent = '';
 
                 if (!data || !data.match) {
+                    // If we've already shown a match once, don't blank the whole screen on a transient null.
+                    // (Android TV browsers / networks can occasionally return a cached or partial response.)
+                    if (hasEverShownMatch) {
+                        return;
+                    }
                     if (lastMatchSeenAtMs !== null && (Date.now() - lastMatchSeenAtMs) < IDLE_GRACE_MS) {
                         return;
                     }
@@ -951,6 +994,15 @@
 
                 var m = data.match;
                 lastMatchSeenAtMs = Date.now();
+                hasEverShownMatch = true;
+
+                // If nothing material changed, avoid DOM churn (important for Android TV memory).
+                var sig = buildSignature(m);
+                if (lastSignature !== null && sig === lastSignature) {
+                    return;
+                }
+                lastSignature = sig;
+
                 idleEl.style.display = 'none';
                 boardEl.className = 'board is-on';
 
@@ -976,10 +1028,18 @@
                 var flagA = (m.side_a_flag && String(m.side_a_flag)) || '';
                 var flagB = (m.side_b_flag && String(m.side_b_flag)) || '';
                 if (team1FlagEl) {
-                    team1FlagEl.textContent = flagA;
+                    if (lastFlagA !== flagA) {
+                        lastFlagA = flagA;
+                        team1FlagEl.textContent = flagA;
+                        parseFlag(team1FlagEl);
+                    }
                 }
                 if (team2FlagEl) {
-                    team2FlagEl.textContent = flagB;
+                    if (lastFlagB !== flagB) {
+                        lastFlagB = flagB;
+                        team2FlagEl.textContent = flagB;
+                        parseFlag(team2FlagEl);
+                    }
                 }
 
                 var nameA = m.side_a_label || '—';
@@ -1033,12 +1093,7 @@
                     }
                 }
 
-                if (window.twemoji) {
-                    window.twemoji.parse(boardEl, {
-                        folder: 'svg',
-                        ext: '.svg'
-                    });
-                }
+                // Do not parse the whole board every poll; it is expensive and can leak memory on TV browsers.
             }
 
             function poll() {
