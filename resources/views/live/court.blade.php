@@ -294,6 +294,17 @@
             overflow: hidden;
         }
 
+        :root {
+            --hall-scale: 1;
+        }
+
+        /* TVs often render CSS px smaller at distance; scale up only on large viewports. */
+        @media (min-width: 1200px) and (min-height: 700px) {
+            :root {
+                --hall-scale: 1.35;
+            }
+        }
+
         .court-tag {
             position: fixed;
             top: 6px;
@@ -376,7 +387,7 @@
         }
 
         .footer-tournament {
-            font-size: clamp(1.1rem, 2.6vh, 3.2vh);
+            font-size: clamp(calc(1.1rem * var(--hall-scale)), calc(2.6vh * var(--hall-scale)), calc(3.2vh * var(--hall-scale)));
             font-weight: 900;
             color: #000;
             text-transform: uppercase;
@@ -397,7 +408,7 @@
         }
 
         .footer-event {
-            font-size: clamp(1rem, 2.2vh, 2.8vh);
+            font-size: clamp(calc(1rem * var(--hall-scale)), calc(2.2vh * var(--hall-scale)), calc(2.8vh * var(--hall-scale)));
             font-weight: 800;
             color: #111;
             text-transform: uppercase;
@@ -409,7 +420,7 @@
             display: inline-block;
             padding: 0.35vh 1.1vw;
             border-radius: 0.5vh;
-            font-size: clamp(0.65rem, 1.35vh, 1.6vh);
+            font-size: clamp(calc(0.65rem * var(--hall-scale)), calc(1.35vh * var(--hall-scale)), calc(1.6vh * var(--hall-scale)));
             font-weight: 900;
             letter-spacing: 0.18em;
             text-transform: uppercase;
@@ -481,7 +492,7 @@
             justify-content: center;
             width: 100%;
             height: 100%;
-            font-size: 6.5vh;
+            font-size: calc(6.5vh * var(--hall-scale));
             line-height: 1;
         }
 
@@ -507,7 +518,7 @@
 
         .team-name {
             color: #ffffff;
-            font-size: clamp(1.25rem, 5vh, 8vh);
+            font-size: clamp(calc(1.25rem * var(--hall-scale)), calc(5vh * var(--hall-scale)), calc(8vh * var(--hall-scale)));
             font-weight: 900;
             letter-spacing: 0.2vw;
             text-transform: uppercase;
@@ -631,7 +642,7 @@
             background: #790d0d;
             color: #fff;
             border-radius: 0.85vh;
-            font-size: clamp(2rem, min(24vh, 17vw), 26vh);
+            font-size: clamp(calc(2rem * var(--hall-scale)), calc(min(24vh, 17vw) * var(--hall-scale)), calc(26vh * var(--hall-scale)));
             font-weight: 900;
             min-width: 6.5vw;
             text-align: center;
@@ -646,7 +657,7 @@
             background: linear-gradient(135deg, #d50000 0%, #8b0000 100%);
             color: #fff;
             border-radius: 0.85vh;
-            font-size: clamp(1.5rem, min(20vh, 15vw), 20vh);
+            font-size: clamp(calc(1.5rem * var(--hall-scale)), calc(min(20vh, 15vw) * var(--hall-scale)), calc(20vh * var(--hall-scale)));
             font-weight: 900;
             min-width: 8vw;
             text-align: center;
@@ -662,7 +673,7 @@
             color: #000;
             padding: 0.55vh 0.7vw;
             border-radius: 0.85vh;
-            font-size: clamp(1rem, min(5vh, 6vw), 7.5vh);
+            font-size: clamp(calc(1rem * var(--hall-scale)), calc(min(5vh, 6vw) * var(--hall-scale)), calc(7.5vh * var(--hall-scale)));
             font-weight: 900;
             min-width: 5.5vw;
             text-align: center;
