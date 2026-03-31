@@ -46,7 +46,7 @@
             position: fixed;
             top: 6px;
             left: 8px;
-            font-size: 9px;
+            font-size: 14px;
             letter-spacing: 0.12em;
             text-transform: uppercase;
             color: rgb(255, 255, 255);
