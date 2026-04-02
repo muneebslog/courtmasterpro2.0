@@ -548,6 +548,48 @@ test('stage route resolves for attached users', function (): void {
     ]))->assertSuccessful();
 });
 
+test('stage match creation lists Bhutan in country options', function (): void {
+    /** @var TestCase $this */
+    /** @var User $admin */
+    $admin = User::factory()->create([
+        'role' => User::ROLE_ADMIN,
+    ]);
+
+    $tournament = Tournament::create([
+        'tournament_name' => 'National Open 2026',
+        'location' => 'Peshawar',
+        'start_date' => now()->toDateString(),
+        'end_date' => now()->addDay()->toDateString(),
+        'status' => 'draft',
+        'admin_id' => $admin->id,
+    ]);
+
+    $event = Event::create([
+        'tournament_id' => $tournament->id,
+        'event_name' => 'National Open Singles',
+        'event_type' => Event::EVENT_TYPE_SINGLES,
+    ]);
+
+    $stage = Stage::create([
+        'event_id' => $event->id,
+        'name' => 'Round of 2',
+        'best_of' => 3,
+        'order_index' => 1,
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test('pages::event.stage', [
+        'tournament' => $tournament->id,
+        'event' => $event->id,
+        'stage' => $stage->id,
+    ])
+        ->call('openCreationFlow')
+        ->assertSee('Bhutan', false)
+        ->assertSee('🇧🇹', false);
+});
+
 test('admin can create singles matches from stage setup', function (): void {
     /** @var TestCase $this */
     /** @var User $admin */

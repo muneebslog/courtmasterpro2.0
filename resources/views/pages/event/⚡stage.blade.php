@@ -176,6 +176,7 @@ new class extends Component {
             '🇧🇩' => 'Bangladesh',
             '🇱🇰' => 'Sri Lanka',
             '🇳🇵' => 'Nepal',
+            '🇧🇹' => 'Bhutan',
             '🇦🇪' => 'UAE',
             '🇸🇦' => 'Saudi Arabia',
             '🇬🇧' => 'United Kingdom',
