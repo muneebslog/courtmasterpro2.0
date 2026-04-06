@@ -1,238 +1,513 @@
-<laravel-boost-guidelines>
-=== foundation rules ===
+# CourtMaster Pro — Agent Guidelines
 
-# Laravel Boost Guidelines
+> Badminton Tournament Management System built with Laravel + Livewire (Flux UI).
+> This document provides essential context for AI coding agents working on this codebase.
 
-The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to ensure the best experience when building Laravel applications.
+---
 
-## Foundational Context
+## Project Overview
 
-This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
+CourtMaster Pro is a web-based tournament management system designed for badminton federations. It manages tournaments from creation through to final results, providing real-time live scores to spectators.
 
-- php - 8.4
-- laravel/fortify (FORTIFY) - v1
-- laravel/framework (LARAVEL) - v13
-- laravel/prompts (PROMPTS) - v0
-- livewire/flux (FLUXUI_FREE) - v2
-- livewire/livewire (LIVEWIRE) - v4
-- laravel/boost (BOOST) - v2
-- laravel/mcp (MCP) - v0
-- laravel/pail (PAIL) - v1
-- laravel/pint (PINT) - v1
-- laravel/sail (SAIL) - v1
-- pestphp/pest (PEST) - v4
-- phpunit/phpunit (PHPUNIT) - v12
-- tailwindcss (TAILWINDCSS) - v4
+### Key Capabilities
 
-## Skills Activation
+- **Tournament Management**: Create and manage tournaments with multiple events
+- **Event Types**: Support for Singles, Doubles, and Team events
+- **Bracket Management**: Automatic stage progression with power-of-2 bracket validation
+- **Live Scoring**: Real-time point-by-point match scoring with undo support
+- **Team Events**: Fixed 5-match tie structure (S1, D1, S2, D2, S3)
+- **Public Viewer**: Read-only tournament viewing with live score updates
+- **PDF Generation**: Match and tie summary exports
+- **Audit Trail**: Complete event logging for all match actions
 
-This project has domain-specific skills available. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
+---
 
-- `fluxui-development` — Use this skill for Flux UI development in Livewire applications only. Trigger when working with <flux:*> components, building or customizing Livewire component UIs, creating forms, modals, tables, or other interactive elements. Covers: flux: components (buttons, inputs, modals, forms, tables, date-pickers, kanban, badges, tooltips, etc.), component composition, Tailwind CSS styling, Heroicons/Lucide icon integration, validation patterns, responsive design, and theming. Do not use for non-Livewire frameworks or non-component styling.
-- `livewire-development` — Use for any task or question involving Livewire. Activate if user mentions Livewire, wire: directives, or Livewire-specific concepts like wire:model, wire:click, wire:sort, or islands, invoke this skill. Covers building new components, debugging reactivity issues, real-time form validation, drag-and-drop, loading states, migrating from Livewire 3 to 4, converting component formats (SFC/MFC/class-based), and performance optimization. Do not use for non-Livewire reactive UI (React, Vue, Alpine-only, Inertia.js) or standard Laravel forms without Livewire.
-- `pest-testing` — Use this skill for Pest PHP testing in Laravel projects only. Trigger whenever any test is being written, edited, fixed, or refactored — including fixing tests that broke after a code change, adding assertions, converting PHPUnit to Pest, adding datasets, and TDD workflows. Always activate when the user asks how to write something in Pest, mentions test files or directories (tests/Feature, tests/Unit, tests/Browser), or needs browser testing, smoke testing multiple pages for JS errors, or architecture tests. Covers: it()/expect() syntax, datasets, mocking, browser testing (visit/click/fill), smoke testing, arch(), Livewire component tests, RefreshDatabase, and all Pest 4 features. Do not use for factories, seeders, migrations, controllers, models, or non-test PHP code.
-- `tailwindcss-development` — Always invoke when the user's message includes 'tailwind' in any form. Also invoke for: building responsive grid layouts (multi-column card grids, product grids), flex/grid page structures (dashboards with sidebars, fixed topbars, mobile-toggle navs), styling UI components (cards, tables, navbars, pricing sections, forms, inputs, badges), adding dark mode variants, fixing spacing or typography, and Tailwind v3/v4 work. The core use case: writing or fixing Tailwind utility classes in HTML templates (Blade, JSX, Vue). Skip for backend PHP logic, database queries, API routes, JavaScript with no HTML/CSS component, CSS file audits, build tool configuration, and vanilla CSS.
-- `fortify-development` — Laravel Fortify headless authentication backend development. Activate when implementing authentication features including login, registration, password reset, email verification, two-factor authentication (2FA/TOTP), profile updates, headless auth, authentication scaffolding, or auth guards in Laravel applications.
+## Technology Stack
 
-## Conventions
+| Component | Version | Purpose |
+|-----------|---------|---------|
+| PHP | ^8.3 | Server-side language |
+| Laravel | ^13.0 | Backend framework |
+| Livewire | ^4.1 | Reactive UI components |
+| Flux UI | ^2.12 | UI component library (Livewire-based) |
+| Tailwind CSS | ^4.0.7 | Styling framework |
+| Vite | ^8.0 | Build tool |
+| Pest | ^4.4 | Testing framework |
+| Laravel Fortify | ^1.34 | Authentication backend |
+| Laravel Pint | ^1.27 | Code formatting |
 
-- You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.
-- Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
-- Check for existing components to reuse before writing a new one.
+### Key Dependencies
 
-## Verification Scripts
-
-- Do not create verification scripts or tinker when tests cover that functionality and prove they work. Unit and feature tests are more important.
-
-## Application Structure & Architecture
-
-- Stick to existing directory structure; don't create new base folders without approval.
-- Do not change the application's dependencies without approval.
-
-## Frontend Bundling
-
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `npm run build`, `npm run dev`, or `composer run dev`. Ask them.
-
-## Documentation Files
-
-- You must only create documentation files if explicitly requested by the user.
-
-## Replies
-
-- Be concise in your explanations - focus on what's important rather than explaining obvious details.
-
-=== boost rules ===
-
-# Laravel Boost
-
-- Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
-
-## Artisan Commands
-
-- Run Artisan commands directly via the command line (e.g., `php artisan route:list`, `php artisan tinker --execute "..."`).
-- Use `php artisan list` to discover available commands and `php artisan [command] --help` to check parameters.
-
-## URLs
-
-- Whenever you share a project URL with the user, you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain/IP, and port.
-
-## Debugging
-
-- Use the `database-query` tool when you only need to read from the database.
-- Use the `database-schema` tool to inspect table structure before writing migrations or models.
-- To execute PHP code for debugging, run `php artisan tinker --execute "your code here"` directly.
-- To read configuration values, read the config files directly or run `php artisan config:show [key]`.
-- To inspect routes, run `php artisan route:list` directly.
-- To check environment variables, read the `.env` file directly.
-
-## Reading Browser Logs With the `browser-logs` Tool
-
-- You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
-- Only recent browser logs will be useful - ignore old logs.
-
-## Searching Documentation (Critically Important)
-
-- Boost comes with a powerful `search-docs` tool you should use before trying other approaches when working with Laravel or Laravel ecosystem packages. This tool automatically passes a list of installed packages and their versions to the remote Boost API, so it returns only version-specific documentation for the user's circumstance. You should pass an array of packages to filter on if you know you need docs for particular packages.
-- Search the documentation before making code changes to ensure we are taking the correct approach.
-- Use multiple, broad, simple, topic-based queries at once. For example: `['rate limiting', 'routing rate limiting', 'routing']`. The most relevant results will be returned first.
-- Do not add package names to queries; package information is already shared. For example, use `test resource table`, not `filament 4 test resource table`.
-
-### Available Search Syntax
-
-1. Simple Word Searches with auto-stemming - query=authentication - finds 'authenticate' and 'auth'.
-2. Multiple Words (AND Logic) - query=rate limit - finds knowledge containing both "rate" AND "limit".
-3. Quoted Phrases (Exact Position) - query="infinite scroll" - words must be adjacent and in that order.
-4. Mixed Queries - query=middleware "rate limit" - "middleware" AND exact phrase "rate limit".
-5. Multiple Queries - queries=["authentication", "middleware"] - ANY of these terms.
-
-=== php rules ===
-
-# PHP
-
-- Always use curly braces for control structures, even for single-line bodies.
-
-## Constructors
-
-- Use PHP 8 constructor property promotion in `__construct()`.
-    - `public function __construct(public GitHub $github) { }`
-- Do not allow empty `__construct()` methods with zero parameters unless the constructor is private.
-
-## Type Declarations
-
-- Always use explicit return type declarations for methods and functions.
-- Use appropriate PHP type hints for method parameters.
-
-<!-- Explicit Return Types and Method Params -->
-```php
-protected function isAccessible(User $user, ?string $path = null): bool
-{
-    ...
+```json
+// composer.json
+"require": {
+    "php": "^8.3",
+    "laravel/framework": "^13.0",
+    "laravel/fortify": "^1.34",
+    "livewire/livewire": "^4.1",
+    "livewire/flux": "^2.12.0",
+    "barryvdh/laravel-dompdf": "^3.1"
 }
 ```
 
-## Enums
+---
 
-- Typically, keys in an Enum should be TitleCase. For example: `FavoritePerson`, `BestLake`, `Monthly`.
+## Project Structure
 
-## Comments
+```
+courtmaster/
+├── app/
+│   ├── Actions/Fortify/       # Fortify auth actions (CreateNewUser, etc.)
+│   ├── Concerns/              # Shared traits (PasswordValidationRules, etc.)
+│   ├── Http/Controllers/      # Standard controllers
+│   ├── Livewire/              # Livewire components (actions, concerns)
+│   ├── Models/                # Eloquent models
+│   ├── Providers/             # Service providers
+│   ├── Services/              # Business logic (NextStageService, TieResultService)
+│   └── Support/               # Helper classes (BracketStageNaming, etc.)
+├── config/                    # Laravel configuration
+├── database/
+│   ├── factories/             # Model factories
+│   ├── migrations/            # Database migrations
+│   └── seeders/               # Database seeders
+├── resources/
+│   ├── css/app.css            # Tailwind CSS entry
+│   ├── js/app.js              # JavaScript entry
+│   └── views/                 # Blade templates
+│       ├── components/        # Blade components (⚡ prefix = Livewire)
+│       ├── layouts/           # App layouts (app, auth)
+│       ├── pages/             # Page templates (⚡ prefix = Livewire)
+│       ├── pdf/               # PDF templates
+│       └── live/              # Live scoreboard views
+├── routes/
+│   ├── web.php                # Web routes
+│   ├── settings.php           # User settings routes
+│   └── console.php            # Console commands
+└── tests/
+    ├── Feature/               # Feature tests (Pest)
+    └── Unit/                  # Unit tests (Pest)
+```
 
-- Prefer PHPDoc blocks over inline comments. Never use comments within the code itself unless the logic is exceptionally complex.
+---
 
-## PHPDoc Blocks
+## Build and Development Commands
 
-- Add useful array shape type definitions when appropriate.
+### Setup (Fresh Installation)
 
-=== tests rules ===
+```bash
+composer setup
+```
 
-# Test Enforcement
+This runs:
+1. `composer install`
+2. Copies `.env.example` to `.env` if needed
+3. Generates application key
+4. Runs migrations
+5. Installs npm dependencies
+6. Builds frontend assets
 
-- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
-- Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test --compact` with a specific filename or filter.
+### Development Server
 
-=== laravel/core rules ===
+```bash
+composer dev
+```
 
-# Do Things the Laravel Way
+Runs concurrently:
+- `php artisan serve` (Laravel server)
+- `php artisan queue:listen` (Queue worker)
+- `npm run dev` (Vite dev server)
 
-- Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using `php artisan list` and check their parameters with `php artisan [command] --help`.
-- If you're creating a generic PHP class, use `php artisan make:class`.
-- Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
+### Frontend Build
 
-## Database
+```bash
+npm run dev     # Development mode
+npm run build   # Production build
+```
 
-- Always use proper Eloquent relationship methods with return type hints. Prefer relationship methods over raw queries or manual joins.
-- Use Eloquent models and relationships before suggesting raw database queries.
-- Avoid `DB::`; prefer `Model::query()`. Generate code that leverages Laravel's ORM capabilities rather than bypassing them.
-- Generate code that prevents N+1 query problems by using eager loading.
-- Use Laravel's query builder for very complex database operations.
+### Code Quality
 
-### Model Creation
+```bash
+# Run linter (auto-fix)
+composer lint
 
-- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `php artisan make:model --help` to check the available options.
+# Check code style (CI)
+composer lint:check
 
-### APIs & Eloquent Resources
+# Run all tests
+composer test
 
-- For APIs, default to using Eloquent API Resources and API versioning unless existing API routes do not, then you should follow existing application convention.
+# Quick CI check
+composer ci:check
+```
 
-## Controllers & Validation
+---
 
-- Always create Form Request classes for validation rather than inline validation in controllers. Include both validation rules and custom error messages.
-- Check sibling Form Requests to see if the application uses array or string based validation rules.
+## Code Style Guidelines
 
-## Authentication & Authorization
+### PHP Standards
 
-- Use Laravel's built-in authentication and authorization features (gates, policies, Sanctum, etc.).
+- **Preset**: Laravel (via Laravel Pint)
+- **Formatting**: Run `vendor/bin/pint --dirty --format agent` after modifying PHP files
+- **Constructor Property Promotion**: Use for dependency injection
 
-## URL Generation
+```php
+// Good
+public function __construct(public GitHub $github) { }
 
-- When generating links to other pages, prefer named routes and the `route()` function.
+// Avoid: Empty constructors
+public function __construct() { }
+```
 
-## Queues
+### Type Declarations
 
-- Use queued jobs for time-consuming operations with the `ShouldQueue` interface.
+Always use explicit return types and parameter type hints:
 
-## Configuration
+```php
+protected function isAccessible(User $user, ?string $path = null): bool
+{
+    // ...
+}
+```
 
-- Use environment variables only in configuration files - never use the `env()` function directly outside of config files. Always use `config('app.name')`, not `env('APP_NAME')`.
+### Comments
+
+- Prefer PHPDoc blocks over inline comments
+- Never use comments within code unless logic is exceptionally complex
+- Use array shape type definitions when appropriate
+
+### Naming Conventions
+
+- **Variables/Methods**: Descriptive names (`isRegisteredForDiscounts`, not `discount()`)
+- **Enums**: TitleCase keys (`FavoritePerson`, `BestLake`)
+- **Database**: Snake_case columns, plural table names
+
+---
 
 ## Testing
 
-- When creating models for tests, use the factories for the models. Check if the factory has custom states that can be used before manually setting up the model.
-- Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
-- When creating tests, make use of `php artisan make:test [options] {name}` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
+### Framework
 
-## Vite Error
+- **Test Runner**: Pest PHP 4
+- **Base Class**: `Tests\TestCase`
+- **Database**: `RefreshDatabase` trait applied automatically in Feature tests
 
-- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
+### Running Tests
 
-=== livewire/core rules ===
+```bash
+# Run all tests compactly
+php artisan test --compact
 
-# Livewire
+# Run specific test file
+php artisan test --compact tests/Feature/DashboardTest.php
 
-- Livewire allow to build dynamic, reactive interfaces in PHP without writing JavaScript.
-- You can use Alpine.js for client-side interactions instead of JavaScript frameworks.
-- Keep state server-side so the UI reflects it. Validate and authorize in actions as you would in HTTP requests.
+# Run with filter
+php artisan test --compact --filter=testName
+```
 
-=== pint/core rules ===
+### Creating Tests
 
-# Laravel Pint Code Formatter
+```bash
+# Feature test
+php artisan make:test --pest FeatureNameTest
 
-- If you have modified any PHP files, you must run `vendor/bin/pint --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
-- Do not run `vendor/bin/pint --test --format agent`, simply run `vendor/bin/pint --format agent` to fix any formatting issues.
+# Unit test
+php artisan make:test --pest --unit UnitNameTest
+```
 
-=== pest/core rules ===
+### Test Structure
 
-## Pest
+```php
+// Feature test example
+it('allows admins to create tournaments', function () {
+    $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+    
+    $this->actingAs($admin)
+        ->post(route('dashboard.tournaments.store'), [
+            'tournament_name' => 'Test Tournament',
+            'location' => 'Test Venue',
+            'start_date' => now()->format('Y-m-d'),
+            'end_date' => now()->addDays(3)->format('Y-m-d'),
+        ])
+        ->assertRedirect();
+    
+    expect(Tournament::count())->toBe(1);
+});
+```
 
-- This project uses Pest for testing. Create tests: `php artisan make:test --pest {name}`.
-- Run tests: `php artisan test --compact` or filter: `php artisan test --compact --filter=testName`.
-- Do NOT delete tests without approval.
+---
 
-=== laravel/fortify rules ===
+## Architecture Patterns
 
-# Laravel Fortify
+### Domain Model Hierarchy
 
-- Fortify is a headless authentication backend that provides authentication routes and controllers for Laravel applications.
-- IMPORTANT: Always use the `search-docs` tool for detailed Laravel Fortify patterns and documentation.
-- IMPORTANT: Activate `developing-with-fortify` skill when working with Fortify authentication features.
+```
+Tournament
+└── Event (singles | doubles | team)
+    ├── Stage (round)
+    │   ├── Tie (team events only)
+    │   │   └── Match (S1, D1, S2, D2, S3)
+    │   └── Match (individual events)
+    │       ├── Game
+    │       └── MatchEvent (audit timeline)
+    └── Team (team events only)
+        └── TeamPlayer
+```
 
-</laravel-boost-guidelines>
+### Key Business Rules
+
+1. **Admin = 1 Tournament**: One admin account manages one active tournament
+2. **Events are Independent**: Different events can be at different stages simultaneously
+3. **Stages are Sequential**: Within an event, stages progress one at a time
+4. **Auto-Advance**: System auto-creates next stage when current stage completes
+5. **Team Tie Structure**: Exactly 5 matches in fixed order (S1, D1, S2, D2, S3)
+6. **Player Eligibility**: Max 1 singles + 1 doubles per player per tie
+7. **BYE Handling**: Blank opponent = auto-advance, no match created
+8. **Deuce Cap**: 20-20 → win by 2 → hard cap at 30-29
+9. **Reset Protection**: Cannot reset match if winner's next match has started
+
+### Eloquent Patterns
+
+```php
+// Prefer relationship methods over raw queries
+$tournament->events()->create([...]);
+
+// Eager loading to prevent N+1
+Tie::with(['teamA', 'teamB', 'matches'])->get();
+
+// Use Model::query() instead of DB::table()
+MatchModel::query()->where('status', 'completed')->get();
+```
+
+### Service Classes
+
+Complex business logic lives in Services:
+
+- `NextStageService`: Stage progression, winner advancement, bracket generation
+- `TieResultService`: Tie winner calculation, match result propagation
+
+---
+
+## Livewire Conventions
+
+### Component Naming
+
+Livewire components use the `⚡` prefix in filenames:
+
+```
+resources/views/components/⚡tournament-details.blade.php
+resources/views/pages/⚡event.blade.php
+resources/views/pages/event/⚡match.blade.php
+```
+
+### Route Registration
+
+```php
+// In routes/web.php
+Route::livewire('viewer/tournaments', 'pages::viewer.tournaments')
+    ->name('viewer.tournaments.index');
+```
+
+### State Management
+
+- Keep state server-side
+- Validate and authorize in actions (like HTTP requests)
+- Use Alpine.js for client-side interactions
+
+---
+
+## Authentication & Authorization
+
+### User Roles
+
+```php
+User::ROLE_ADMIN    = 'admin';     // Full tournament control
+User::ROLE_UMPIRES  = 'umpires';   // Match scoring (shared account)
+```
+
+### Middleware
+
+```php
+// Auth routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    // ...
+});
+
+// Role-specific (in controllers)
+abort_unless(
+    $user instanceof User && in_array($user->role, [User::ROLE_ADMIN, User::ROLE_UMPIRES], true),
+    403
+);
+```
+
+### Fortify Features
+
+- Login / Registration
+- Email verification
+- Password reset
+- Two-factor authentication (optional)
+- Profile updates
+
+---
+
+## Database Conventions
+
+### Migrations
+
+```bash
+php artisan make:migration create_tablename_table
+```
+
+### MySQL vs SQLite
+
+Several migrations branch on driver for enum support:
+
+```php
+if (Schema::getConnection()->getDriverName() === 'sqlite') {
+    $table->string('status')->default('pending');
+} else {
+    $table->enum('status', ['pending', 'active', 'completed'])->default('pending');
+}
+```
+
+### Relationships
+
+| Model | Relationship | Target |
+|-------|-------------|--------|
+| User | tournaments() | Tournament (many-to-many) |
+| Tournament | events() | Event (has-many) |
+| Tournament | users() | User (many-to-many) |
+| Event | stages() | Stage (has-many) |
+| Event | teams() | Team (has-many) |
+| Stage | ties() | Tie (has-many) |
+| Stage | matches() | MatchModel (has-many) |
+| Tie | matches() | MatchModel (has-many) |
+| MatchModel | matchPlayers() | MatchPlayer (has-many) |
+| MatchModel | games() | Game (has-many) |
+| MatchModel | matchEvents() | MatchEvent (has-many) |
+| Team | teamPlayers() | TeamPlayer (has-many) |
+
+---
+
+## Frontend Conventions
+
+### CSS Framework
+
+- **Tailwind CSS v4** with Vite plugin
+- **Flux UI** components imported from `vendor/livewire/flux`
+
+### CSS Entry Point
+
+```css
+/* resources/css/app.css */
+@import 'tailwindcss';
+@import '../../vendor/livewire/flux/dist/flux.css';
+```
+
+### Blade Components
+
+```blade
+{{-- Flux UI components --}}
+<flux:button variant="primary">Save</flux:button>
+<flux:input wire:model="name" label="Tournament Name" />
+
+{{-- Custom app components --}}
+<x-app-logo />
+<x-action-message on="saved">Saved!</x-action-message>
+```
+
+---
+
+## Common Tasks
+
+### Creating a New Model
+
+```bash
+php artisan make:model -f -s -c -r ModelName
+```
+
+Options:
+- `-f` Factory
+- `-s` Seeder
+- `-c` Controller
+- `-r` Resource controller
+
+### Creating a Livewire Component
+
+Create a Blade file with `⚡` prefix:
+
+```bash
+# Create resources/views/pages/⚡component.blade.php
+# Register in routes/web.php with Route::livewire()
+```
+
+### Adding a Route
+
+```php
+// Public route
+Route::view('/', 'welcome')->name('home');
+
+// Controller route
+Route::get('tournaments/{tournament}', [TournamentController::class, 'show'])
+    ->name('tournaments.show');
+
+// Livewire route
+Route::livewire('viewer/tournaments', 'pages::viewer.tournaments')
+    ->name('viewer.tournaments.index');
+```
+
+---
+
+## Security Considerations
+
+1. **Authentication**: Fortify-based, with verified email middleware where required
+2. **Authorization**: Role-based checks in controllers; abort_unless() for permission gates
+3. **CSRF**: Automatic via Laravel's web middleware
+4. **XSS**: Blade's `{{ }}` escaping by default
+5. **Rate Limiting**: Throttle applied to live score API (`throttle:live-court-score`)
+6. **Password Hashing**: Bcrypt via Laravel's default
+7. **Two-Factor Auth**: Optional TOTP support via Fortify
+
+---
+
+## Key Files Reference
+
+| Purpose | File |
+|---------|------|
+| Main routes | `routes/web.php` |
+| Settings routes | `routes/settings.php` |
+| App config | `config/app.php` |
+| Fortify config | `config/fortify.php` |
+| Database config | `config/database.php` |
+| Pint config | `pint.json` |
+| Vite config | `vite.config.js` |
+| Package deps | `composer.json`, `package.json` |
+| Full spec | `info.md` |
+| Client overview | `client.md` |
+| Database docs | `db.md` |
+
+---
+
+## Troubleshooting
+
+### Vite Manifest Error
+
+If you see "Unable to locate file in Vite manifest":
+
+```bash
+npm run build
+# or
+npm run dev
+```
+
+### Test Database Issues
+
+Tests use `RefreshDatabase` trait with SQLite by default. Ensure `phpunit.xml` is configured correctly.
+
+### Queue Workers
+
+For production, use `php artisan queue:work` instead of `queue:listen`.
+
+---
+
+*Last updated: 2026-04-06*
+*CourtMaster Pro v1.0*

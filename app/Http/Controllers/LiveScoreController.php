@@ -22,7 +22,7 @@ class LiveScoreController extends Controller
 
     public function allView(): View
     {
-        return view('live.all', ['courts' => range(1, 4)]);
+        return view('live.all', ['courts' => range(1, 2)]);
     }
 
     /**

@@ -37,7 +37,7 @@
         .courts-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: repeat(2, 1fr);
+            grid-template-rows: 1fr;
             width: 100vw;
             height: 100vh;
             gap: 4px;
