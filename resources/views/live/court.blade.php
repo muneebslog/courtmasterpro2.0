@@ -1054,7 +1054,7 @@
                         <!-- Team 1 -->
                         <div class="team-row">
                             <div class="team-logo logo-team1" aria-hidden="true">
-                                <span id="team1Flag" class="team-flag-emoji"></span>
+                                <span id="team1Flag" class="team-flag-emoji">🏳️</span>
                             </div>
 
                             <div class="team-info">
@@ -1078,7 +1078,7 @@
                         <!-- Team 2 -->
                         <div class="team-row">
                             <div class="team-logo logo-team2" aria-hidden="true">
-                                <span id="team2Flag" class="team-flag-emoji"></span>
+                                <span id="team2Flag" class="team-flag-emoji">🏳️</span>
                             </div>
 
                             <div class="team-info">
